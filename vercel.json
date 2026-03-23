@@ -1,0 +1,19 @@
+{
+  "installCommand": "npm install --prefix Billit-Dashboard",
+  "buildCommand": "npm run build --prefix Billit-Dashboard",
+  "outputDirectory": "Billit-Dashboard/dist",
+  "functions": {
+    "api/**/*.js": {
+      "includeFiles": "backend/data/**"
+    }
+  },
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

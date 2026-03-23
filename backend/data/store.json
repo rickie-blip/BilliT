@@ -1,0 +1,504 @@
+{
+  "customers": [
+    {
+      "id": "1",
+      "name": "Grace Wanjiku",
+      "phone": "0712345678",
+      "email": "grace@email.com",
+      "plan": "Home 10Mbps",
+      "monthlyFee": 2500,
+      "status": "active",
+      "connectionType": "PPPoE",
+      "macAddress": "AA:BB:CC:11:22:33",
+      "ipAddress": "10.0.1.12",
+      "router": "Tower-A MikroTik",
+      "lastPayment": "2026-03-05",
+      "dueDate": "2026-04-05",
+      "balance": 0
+    },
+    {
+      "id": "2",
+      "name": "James Ochieng",
+      "phone": "0723456789",
+      "email": "james.o@email.com",
+      "plan": "Business 20Mbps",
+      "monthlyFee": 5000,
+      "status": "active",
+      "connectionType": "PPPoE",
+      "macAddress": "DD:EE:FF:44:55:66",
+      "ipAddress": "10.0.1.34",
+      "router": "CBD-Router",
+      "lastPayment": "2026-03-10",
+      "dueDate": "2026-04-10",
+      "balance": 0
+    },
+    {
+      "id": "3",
+      "name": "Fatima Hassan",
+      "phone": "0734567890",
+      "email": "fatima.h@email.com",
+      "plan": "Home 5Mbps",
+      "monthlyFee": 1500,
+      "status": "suspended",
+      "connectionType": "DHCP",
+      "macAddress": "11:22:33:AA:BB:CC",
+      "ipAddress": "10.0.2.8",
+      "router": "Estate-Switch",
+      "lastPayment": "2026-01-15",
+      "dueDate": "2026-02-15",
+      "balance": 3000
+    },
+    {
+      "id": "4",
+      "name": "Peter Kamau",
+      "phone": "0745678901",
+      "email": "peter.k@email.com",
+      "plan": "Home 10Mbps",
+      "monthlyFee": 2500,
+      "status": "active",
+      "connectionType": "PPPoE",
+      "macAddress": "77:88:99:DD:EE:FF",
+      "ipAddress": "10.0.1.56",
+      "router": "Tower-A MikroTik",
+      "lastPayment": "2026-03-18",
+      "dueDate": "2026-04-18",
+      "balance": 0
+    },
+    {
+      "id": "5",
+      "name": "Amina Yusuf",
+      "phone": "0756789012",
+      "email": "amina.y@email.com",
+      "plan": "Business 50Mbps",
+      "monthlyFee": 12000,
+      "status": "active",
+      "connectionType": "Static",
+      "macAddress": "CC:DD:EE:77:88:99",
+      "ipAddress": "10.0.3.2",
+      "router": "CBD-Router",
+      "lastPayment": "2026-03-01",
+      "dueDate": "2026-04-01",
+      "balance": 0
+    },
+    {
+      "id": "6",
+      "name": "David Mwangi",
+      "phone": "0767890123",
+      "email": "david.m@email.com",
+      "plan": "Home 5Mbps",
+      "monthlyFee": 1500,
+      "status": "suspended",
+      "connectionType": "DHCP",
+      "macAddress": "FF:AA:BB:22:33:44",
+      "ipAddress": "10.0.2.19",
+      "router": "Estate-Switch",
+      "lastPayment": "2026-03-23",
+      "dueDate": "2026-01-20",
+      "balance": 3000
+    }
+  ],
+  "routers": [
+    {
+      "id": "1",
+      "name": "Tower-A MikroTik",
+      "model": "CCR1036-12G-4S",
+      "ipAddress": "192.168.1.1",
+      "status": "online",
+      "uptime": "47d 12h 34m",
+      "connectedUsers": 84,
+      "cpuLoad": 23,
+      "memoryUsage": 41,
+      "bandwidth": {
+        "up": 156,
+        "down": 412
+      },
+      "location": "Westlands Tower"
+    },
+    {
+      "id": "2",
+      "name": "CBD-Router",
+      "model": "RB4011iGS+",
+      "ipAddress": "192.168.2.1",
+      "status": "online",
+      "uptime": "12d 8h 11m",
+      "connectedUsers": 127,
+      "cpuLoad": 58,
+      "memoryUsage": 67,
+      "bandwidth": {
+        "up": 340,
+        "down": 890
+      },
+      "location": "CBD Office Block"
+    },
+    {
+      "id": "3",
+      "name": "Estate-Switch",
+      "model": "CRS326-24G-2S+",
+      "ipAddress": "192.168.3.1",
+      "status": "warning",
+      "uptime": "3d 1h 45m",
+      "connectedUsers": 42,
+      "cpuLoad": 78,
+      "memoryUsage": 82,
+      "bandwidth": {
+        "up": 67,
+        "down": 198
+      },
+      "location": "Kilimani Estate"
+    },
+    {
+      "id": "4",
+      "name": "South-B Node",
+      "model": "hEX S",
+      "ipAddress": "192.168.4.1",
+      "status": "offline",
+      "uptime": "-",
+      "connectedUsers": 0,
+      "cpuLoad": 0,
+      "memoryUsage": 0,
+      "bandwidth": {
+        "up": 0,
+        "down": 0
+      },
+      "location": "South B Distribution"
+    }
+  ],
+  "detectedUsers": [
+    {
+      "id": "1",
+      "macAddress": "AA:BB:CC:11:22:33",
+      "ipAddress": "10.0.1.12",
+      "hostname": "Grace-Laptop",
+      "detectionMethod": "PPPoE",
+      "firstSeen": "2026-01-15 08:30",
+      "lastSeen": "2026-03-20 14:22",
+      "status": "registered",
+      "dataUsage": "47.2 GB",
+      "router": "Tower-A MikroTik",
+      "assignedCustomer": "Grace Wanjiku"
+    },
+    {
+      "id": "2",
+      "macAddress": "EE:FF:00:11:22:33",
+      "ipAddress": "10.0.1.88",
+      "hostname": "Unknown-Device-1",
+      "detectionMethod": "DHCP",
+      "firstSeen": "2026-03-19 22:14",
+      "lastSeen": "2026-03-23 07:25",
+      "status": "registered",
+      "dataUsage": "2.1 GB",
+      "router": "Tower-A MikroTik",
+      "assignedCustomer": "Grace Wanjiku"
+    },
+    {
+      "id": "3",
+      "macAddress": "DD:EE:FF:44:55:66",
+      "ipAddress": "10.0.1.34",
+      "hostname": "James-PC",
+      "detectionMethod": "PPPoE",
+      "firstSeen": "2025-11-02 10:00",
+      "lastSeen": "2026-03-20 15:10",
+      "status": "registered",
+      "dataUsage": "312.8 GB",
+      "router": "CBD-Router",
+      "assignedCustomer": "James Ochieng"
+    },
+    {
+      "id": "4",
+      "macAddress": "AB:CD:EF:12:34:56",
+      "ipAddress": "10.0.2.45",
+      "hostname": "android-8f3a",
+      "detectionMethod": "MAC",
+      "firstSeen": "2026-03-20 09:45",
+      "lastSeen": "2026-03-23 07:25",
+      "status": "registered",
+      "dataUsage": "890 MB",
+      "router": "Estate-Switch",
+      "assignedCustomer": "Grace Wanjiku"
+    },
+    {
+      "id": "5",
+      "macAddress": "77:88:99:DD:EE:FF",
+      "ipAddress": "10.0.1.56",
+      "hostname": "Peters-Phone",
+      "detectionMethod": "DHCP",
+      "firstSeen": "2026-02-10 16:30",
+      "lastSeen": "2026-03-20 15:05",
+      "status": "registered",
+      "dataUsage": "18.4 GB",
+      "router": "Tower-A MikroTik",
+      "assignedCustomer": "Peter Kamau"
+    },
+    {
+      "id": "6",
+      "macAddress": "99:AA:BB:CC:DD:EE",
+      "ipAddress": "10.0.3.17",
+      "hostname": "DESKTOP-K8MN2",
+      "detectionMethod": "MAC",
+      "firstSeen": "2026-03-18 11:20",
+      "lastSeen": "2026-03-23 07:25",
+      "status": "registered",
+      "dataUsage": "5.6 GB",
+      "router": "CBD-Router",
+      "assignedCustomer": "Grace Wanjiku"
+    }
+  ],
+  "mpesaTransactions": [
+    {
+      "id": "1",
+      "transactionId": "SHK7G4D2F1",
+      "phone": "0712345678",
+      "amount": 2500,
+      "status": "completed",
+      "timestamp": "2026-03-20 14:32",
+      "customerName": "Grace Wanjiku",
+      "accountRef": "ISP-001"
+    },
+    {
+      "id": "2",
+      "transactionId": "RKL9M3B8H5",
+      "phone": "0723456789",
+      "amount": 5000,
+      "status": "completed",
+      "timestamp": "2026-03-20 12:15",
+      "customerName": "James Ochieng",
+      "accountRef": "ISP-002"
+    },
+    {
+      "id": "3",
+      "transactionId": "QPN2X7C4J9",
+      "phone": "0745678901",
+      "amount": 2500,
+      "status": "pending",
+      "timestamp": "2026-03-20 15:01",
+      "customerName": "Peter Kamau",
+      "accountRef": "ISP-004"
+    },
+    {
+      "id": "4",
+      "transactionId": "WVT5K1F6L3",
+      "phone": "0734567890",
+      "amount": 1500,
+      "status": "failed",
+      "timestamp": "2026-03-19 18:44",
+      "customerName": "Fatima Hassan",
+      "accountRef": "ISP-003"
+    },
+    {
+      "id": "5",
+      "transactionId": "BMH8R2D9N4",
+      "phone": "0756789012",
+      "amount": 12000,
+      "status": "completed",
+      "timestamp": "2026-03-19 09:20",
+      "customerName": "Amina Yusuf",
+      "accountRef": "ISP-005"
+    }
+  ],
+  "revenueData": [
+    {
+      "month": "Oct",
+      "revenue": 142000,
+      "collected": 128000
+    },
+    {
+      "month": "Nov",
+      "revenue": 156000,
+      "collected": 145000
+    },
+    {
+      "month": "Dec",
+      "revenue": 148000,
+      "collected": 131000
+    },
+    {
+      "month": "Jan",
+      "revenue": 162000,
+      "collected": 155000
+    },
+    {
+      "month": "Feb",
+      "revenue": 171000,
+      "collected": 163000
+    },
+    {
+      "month": "Mar",
+      "revenue": 178500,
+      "collected": 168000
+    }
+  ],
+  "plans": [
+    {
+      "id": "1",
+      "name": "Okoa",
+      "price": 30,
+      "durationDays": 1,
+      "downloadMbps": 10,
+      "uploadMbps": 10,
+      "createdAt": "2026-03-23 08:01"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "6",
+      "customerId": "6",
+      "customerName": "David Mwangi",
+      "plan": "Home 5Mbps",
+      "amount": 1500,
+      "dueDate": "2026-01-20",
+      "status": "paid",
+      "period": "2026-03",
+      "createdAt": "2026-03-23 08:01",
+      "paidAt": "2026-03-23 08:01"
+    },
+    {
+      "id": "5",
+      "customerId": "5",
+      "customerName": "Amina Yusuf",
+      "plan": "Business 50Mbps",
+      "amount": 12000,
+      "dueDate": "2026-04-01",
+      "status": "unpaid",
+      "period": "2026-03",
+      "createdAt": "2026-03-23 08:01",
+      "paidAt": ""
+    },
+    {
+      "id": "4",
+      "customerId": "4",
+      "customerName": "Peter Kamau",
+      "plan": "Home 10Mbps",
+      "amount": 2500,
+      "dueDate": "2026-04-18",
+      "status": "unpaid",
+      "period": "2026-03",
+      "createdAt": "2026-03-23 08:01",
+      "paidAt": ""
+    },
+    {
+      "id": "3",
+      "customerId": "3",
+      "customerName": "Fatima Hassan",
+      "plan": "Home 5Mbps",
+      "amount": 1500,
+      "dueDate": "2026-02-15",
+      "status": "unpaid",
+      "period": "2026-03",
+      "createdAt": "2026-03-23 08:01",
+      "paidAt": ""
+    },
+    {
+      "id": "2",
+      "customerId": "2",
+      "customerName": "James Ochieng",
+      "plan": "Business 20Mbps",
+      "amount": 5000,
+      "dueDate": "2026-04-10",
+      "status": "unpaid",
+      "period": "2026-03",
+      "createdAt": "2026-03-23 08:01",
+      "paidAt": ""
+    },
+    {
+      "id": "1",
+      "customerId": "1",
+      "customerName": "Grace Wanjiku",
+      "plan": "Home 10Mbps",
+      "amount": 2500,
+      "dueDate": "2026-04-05",
+      "status": "unpaid",
+      "period": "2026-03",
+      "createdAt": "2026-03-23 08:01",
+      "paidAt": ""
+    }
+  ],
+  "radiusAuthLogs": [],
+  "routerActionLogs": [],
+  "auditLogs": [
+    {
+      "id": "10",
+      "timestamp": "2026-03-23 08:01",
+      "type": "invoice.paid",
+      "actor": "admin@billit.local",
+      "invoiceId": "6",
+      "customerId": "6",
+      "amount": 1500
+    },
+    {
+      "id": "9",
+      "timestamp": "2026-03-23 08:01",
+      "type": "invoice.generated",
+      "actor": "admin@billit.local",
+      "customerId": "6",
+      "invoiceId": "6",
+      "amount": 1500
+    },
+    {
+      "id": "8",
+      "timestamp": "2026-03-23 08:01",
+      "type": "invoice.generated",
+      "actor": "admin@billit.local",
+      "customerId": "5",
+      "invoiceId": "5",
+      "amount": 12000
+    },
+    {
+      "id": "7",
+      "timestamp": "2026-03-23 08:01",
+      "type": "invoice.generated",
+      "actor": "admin@billit.local",
+      "customerId": "4",
+      "invoiceId": "4",
+      "amount": 2500
+    },
+    {
+      "id": "6",
+      "timestamp": "2026-03-23 08:01",
+      "type": "invoice.generated",
+      "actor": "admin@billit.local",
+      "customerId": "3",
+      "invoiceId": "3",
+      "amount": 1500
+    },
+    {
+      "id": "5",
+      "timestamp": "2026-03-23 08:01",
+      "type": "invoice.generated",
+      "actor": "admin@billit.local",
+      "customerId": "2",
+      "invoiceId": "2",
+      "amount": 5000
+    },
+    {
+      "id": "4",
+      "timestamp": "2026-03-23 08:01",
+      "type": "invoice.generated",
+      "actor": "admin@billit.local",
+      "customerId": "1",
+      "invoiceId": "1",
+      "amount": 2500
+    },
+    {
+      "id": "3",
+      "timestamp": "2026-03-23 08:01",
+      "type": "plan.created",
+      "actor": "admin@billit.local",
+      "planId": "1"
+    },
+    {
+      "id": "2",
+      "timestamp": "2026-03-23 07:57",
+      "type": "auth.login.success",
+      "actor": "admin@billit.local",
+      "userId": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+      "sourceIp": "::1"
+    },
+    {
+      "id": "1",
+      "timestamp": "2026-03-23 07:38",
+      "type": "automation.customer.suspended",
+      "actor": "system",
+      "customerId": "6"
+    }
+  ]
+}

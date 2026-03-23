@@ -1,0 +1,12 @@
+[
+  {
+    "id": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+    "email": "admin@billit.local",
+    "fullName": "Platform Admin",
+    "passwordHash": "$2b$12$FIQ0MCC5vrVS5DRKbtA8Je0VaxXFdjXmchU19gkK6f29zijehNXdK",
+    "role": "ADMIN",
+    "isActive": true,
+    "createdAt": "2026-03-23T07:07:52.252Z",
+    "updatedAt": "2026-03-23T07:07:52.252Z"
+  }
+]
