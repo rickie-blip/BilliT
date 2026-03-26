@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { dataFile } from "../config/paths.js";
-import { openApiDocument } from "../config/openapi.js";
 import { readStore, writeStore } from "../data/store.js";
 import { countUsers, createUser, findUserByEmail, findUserById, listUsers } from "../data/users.js";
 import {
@@ -16,8 +15,9 @@ import { requireRole } from "../security/rbac.js";
 import { appendAuditLog, appendRadiusLog, appendRouterActionLog } from "../services/audit.js";
 import { buildDashboardResponse, updateRevenueForCurrentMonth } from "../services/dashboard.js";
 import { billingQueue } from "../services/queue.js";
+import { sendDarajaStkPush } from "../services/mpesa.js";
 import { testRouterTcpConnection } from "../services/router.js";
-import { formatTimestamp, nextId } from "../utils/helpers.js";
+import { formatTimestamp, hoursBetween, nextId } from "../utils/helpers.js";
 import { parsePath, readJsonBody, sendJson } from "../utils/http.js";
 
 const getClientIp = (req) => {
@@ -68,6 +68,88 @@ const parseNumber = (value, fallback = 0) => {
 const currentPeriod = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const getRestCatalog = () => ({
+  service: "billit-backend",
+  style: "REST",
+  version: "1.0.0",
+  description: "ISP billing and network management API",
+  endpoints: [
+    { method: "GET", path: "/api", description: "API catalog" },
+    { method: "GET", path: "/api/health", description: "Health check" },
+    { method: "POST", path: "/api/auth/login", description: "Authenticate and receive a JWT" },
+    { method: "POST", path: "/api/auth/register", description: "Create a user" },
+    { method: "GET", path: "/api/auth/me", description: "Get current user" },
+    { method: "GET", path: "/api/dashboard", description: "Dashboard summary" },
+    { method: "GET", path: "/api/customers", description: "List customers" },
+    { method: "POST", path: "/api/customers", description: "Create customer" },
+    { method: "GET", path: "/api/plans", description: "List plans" },
+    { method: "POST", path: "/api/plans", description: "Create plan" },
+    { method: "GET", path: "/api/invoices", description: "List invoices" },
+    { method: "POST", path: "/api/invoices/generate", description: "Generate invoices for current period" },
+    { method: "PATCH", path: "/api/invoices/:id/pay", description: "Mark invoice paid" },
+    { method: "GET", path: "/api/routers", description: "List routers" },
+    { method: "POST", path: "/api/routers", description: "Create router" },
+    { method: "PATCH", path: "/api/routers/:id/configure", description: "Update router settings" },
+    { method: "POST", path: "/api/routers/:id/test-connection", description: "Test router TCP connection" },
+    { method: "GET", path: "/api/routers/:id/sessions", description: "List routed sessions" },
+    { method: "POST", path: "/api/routers/:id/disconnect-user", description: "Queue a disconnect action" },
+    { method: "POST", path: "/api/radius/auth", description: "Simulate RADIUS authentication" },
+    { method: "GET", path: "/api/radius/logs", description: "List RADIUS logs" },
+    { method: "GET", path: "/api/detected-users", description: "List detected users" },
+    { method: "PATCH", path: "/api/detected-users/:id/assign", description: "Assign detected user to a customer" },
+    { method: "GET", path: "/api/mpesa/transactions", description: "List M-Pesa transactions" },
+    { method: "POST", path: "/api/mpesa/stk-push", description: "Initiate a real STK push payment" },
+    { method: "POST", path: "/api/mpesa/callback", description: "Safaricom STK callback" },
+    { method: "GET", path: "/api/reports/summary", description: "Report summary" },
+    { method: "GET", path: "/api/reports/logs", description: "Audit and router logs" },
+  ],
+});
+
+const settleMpesaTransaction = async (store, transaction, { resultCode, resultDesc, receiptNumber, callbackTimestamp }) => {
+  const alreadySettled = Boolean(transaction.settledAt);
+  transaction.resultCode = Number.isFinite(Number(resultCode)) ? Number(resultCode) : resultCode;
+  transaction.resultDesc = String(resultDesc || "");
+  transaction.receiptNumber = receiptNumber || transaction.receiptNumber || "";
+  transaction.gatewayStatus = Number(resultCode) === 0 ? "completed" : "failed";
+  transaction.status = Number(resultCode) === 0 ? "completed" : "failed";
+  transaction.settledAt = callbackTimestamp;
+
+  if (Number(resultCode) !== 0 || alreadySettled) {
+    return;
+  }
+
+  updateRevenueForCurrentMonth(store, Number(transaction.amount || 0), true);
+
+  if (transaction.customerId) {
+    const customer = store.customers.find((item) => item.id === transaction.customerId);
+    if (customer) {
+      customer.balance = Math.max(0, Number(customer.balance || 0) - Number(transaction.amount || 0));
+      customer.lastPayment = String(callbackTimestamp || transaction.timestamp).split(" ")[0];
+      customer.status = customer.balance > 0 ? customer.status : "active";
+    }
+  }
+
+  appendAuditLog(store, {
+    type: "payment.received",
+    actor: "system",
+    customerId: transaction.customerId || null,
+    amount: Number(transaction.amount || 0),
+    transactionId: transaction.transactionId,
+    resultCode: Number(resultCode),
+  });
+
+  try {
+    await billingQueue.add("payment-received", {
+      customerId: transaction.customerId || null,
+      amount: Number(transaction.amount || 0),
+      transactionId: transaction.transactionId,
+      at: callbackTimestamp || transaction.timestamp,
+    });
+  } catch {
+    // Queue outages should not block payment reconciliation.
+  }
 };
 
 const generateInvoicesForCurrentPeriod = (store, actorEmail) => {
@@ -135,8 +217,8 @@ export const handleApiRequest = async (req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/docs" && method === "GET") {
-    sendJson(res, 200, openApiDocument);
+  if (url.pathname === "/api" && method === "GET") {
+    sendJson(res, 200, getRestCatalog());
     return;
   }
 
@@ -593,7 +675,7 @@ export const handleApiRequest = async (req, res) => {
       .map((user) => ({
         username: user.assignedCustomer || user.hostname,
         ipAddress: user.ipAddress,
-        sessionTime: `${Math.max(1, Math.floor(Math.random() * 48))}h`,
+        sessionTime: `${hoursBetween(user.firstSeen || formatTimestamp(), user.lastSeen || formatTimestamp())}h`,
         bandwidthUsage: user.dataUsage,
       }));
 
@@ -751,6 +833,38 @@ export const handleApiRequest = async (req, res) => {
     return;
   }
 
+  if (url.pathname === "/api/mpesa/callback" && method === "POST") {
+    const body = await readJsonBody(req);
+    const callback = body?.Body?.stkCallback || body?.stkCallback || body?.Body || body || {};
+    const checkoutRequestId = callback.CheckoutRequestID || body?.CheckoutRequestID;
+    const merchantRequestId = callback.MerchantRequestID || body?.MerchantRequestID;
+    const resultCode = Number(callback.ResultCode ?? body?.ResultCode ?? 1);
+    const resultDesc = String(callback.ResultDesc ?? body?.ResultDesc ?? "");
+    const metadata = Array.isArray(callback.CallbackMetadata?.Item) ? callback.CallbackMetadata.Item : [];
+    const receiptNumber = metadata.find((item) => item?.Name === "MpesaReceiptNumber")?.Value || "";
+    const transaction = store.mpesaTransactions.find(
+      (item) =>
+        (checkoutRequestId && item.checkoutRequestId === checkoutRequestId) ||
+        (merchantRequestId && item.merchantRequestId === merchantRequestId)
+    );
+
+    if (!transaction) {
+      sendJson(res, 404, { message: "Transaction not found" });
+      return;
+    }
+
+    const callbackTimestamp = formatTimestamp();
+    await settleMpesaTransaction(store, transaction, {
+      resultCode,
+      resultDesc,
+      receiptNumber,
+      callbackTimestamp,
+    });
+
+    await writeStore(store);
+    sendJson(res, 200, { message: "Callback processed" });
+    return;
+  }
   if (url.pathname === "/api/detected-users" && method === "GET") {
     sendJson(res, 200, store.detectedUsers);
     return;
@@ -827,47 +941,82 @@ export const handleApiRequest = async (req, res) => {
 
     const transaction = {
       id: nextId(store.mpesaTransactions),
-      transactionId: `STK${Math.random().toString(36).slice(2, 10).toUpperCase()}`,
+      transactionId: `STK${Date.now().toString(36).toUpperCase()}${randomUUID().slice(0, 8).toUpperCase()}`,
       phone: String(body.phone),
       amount: parsedAmount,
-      status: "completed",
+      status: "pending",
       timestamp: formatTimestamp(),
+      customerId: customer?.id || null,
       customerName: customer?.name || "Unknown Customer",
       accountRef: customer ? `ISP-${customer.id.padStart(3, "0")}` : "ISP-UNK",
+      gateway: "daraja",
+      gatewayStatus: "initiated",
+      receiptNumber: "",
+      merchantRequestId: "",
+      checkoutRequestId: "",
+      resultCode: null,
+      resultDesc: "",
+      settledAt: "",
     };
 
     store.mpesaTransactions.unshift(transaction);
-    updateRevenueForCurrentMonth(store, parsedAmount, true);
 
     try {
-      await billingQueue.add("payment-received", {
+      const darajaResponse = await sendDarajaStkPush({
+        amount: parsedAmount,
+        phone: body.phone,
+        accountReference: transaction.accountRef,
+        transactionDesc: body.description || `BillIT invoice for ${transaction.customerName}`,
+      });
+
+      transaction.merchantRequestId = darajaResponse?.MerchantRequestID || "";
+      transaction.checkoutRequestId = darajaResponse?.CheckoutRequestID || "";
+      transaction.gatewayStatus = darajaResponse?.ResponseCode === "0" ? "queued" : "failed";
+      transaction.resultDesc = darajaResponse?.ResponseDescription || "";
+      transaction.resultCode = darajaResponse?.ResponseCode !== undefined ? Number(darajaResponse.ResponseCode) : null;
+      transaction.gatewayResponse = darajaResponse;
+
+      appendAuditLog(store, {
+        type: "payment.requested",
+        actor: actor.email,
         customerId: customer?.id || null,
         amount: parsedAmount,
         transactionId: transaction.transactionId,
-        at: transaction.timestamp,
+        checkoutRequestId: transaction.checkoutRequestId,
       });
-    } catch {
-      // Queue outages should not block payment flow.
+
+      await writeStore(store);
+      sendJson(res, 201, {
+        ...transaction,
+        message: darajaResponse?.CustomerMessage || "STK push sent",
+      });
+      return;
+    } catch (error) {
+      transaction.status = "failed";
+      transaction.gatewayStatus = "error";
+      transaction.resultDesc = error instanceof Error ? error.message : "STK push failed";
+      transaction.settledAt = formatTimestamp();
+
+      appendAuditLog(store, {
+        type: "payment.request.failed",
+        actor: actor.email,
+        customerId: customer?.id || null,
+        amount: parsedAmount,
+        transactionId: transaction.transactionId,
+        error: transaction.resultDesc,
+      });
+
+      await writeStore(store);
+      sendJson(res, 502, { message: transaction.resultDesc });
+      return;
     }
-
-    if (customer) {
-      customer.balance = Math.max(0, Number(customer.balance || 0) - parsedAmount);
-      customer.lastPayment = transaction.timestamp.split(" ")[0];
-      customer.status = customer.balance > 0 ? customer.status : "active";
-    }
-
-    appendAuditLog(store, {
-      type: "payment.received",
-      actor: actor.email,
-      customerId: customer?.id || null,
-      amount: parsedAmount,
-      transactionId: transaction.transactionId,
-    });
-
-    await writeStore(store);
-    sendJson(res, 201, transaction);
-    return;
   }
 
   sendJson(res, 404, { message: "Not found" });
 };
+
+
+
+
+
+

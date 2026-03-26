@@ -12,7 +12,7 @@
       "macAddress": "AA:BB:CC:11:22:33",
       "ipAddress": "10.0.1.12",
       "router": "Tower-A MikroTik",
-      "lastPayment": "2026-03-05",
+      "lastPayment": "2026-03-26",
       "dueDate": "2026-04-05",
       "balance": 0
     },
@@ -76,7 +76,7 @@
       "macAddress": "CC:DD:EE:77:88:99",
       "ipAddress": "10.0.3.2",
       "router": "CBD-Router",
-      "lastPayment": "2026-03-01",
+      "lastPayment": "2026-03-26",
       "dueDate": "2026-04-01",
       "balance": 0
     },
@@ -245,6 +245,18 @@
   ],
   "mpesaTransactions": [
     {
+      "id": "6",
+      "transactionId": "STKMN7FPX0J93DC2CD7",
+      "phone": "0719542172",
+      "amount": 20,
+      "status": "completed",
+      "timestamp": "2026-03-26 12:14",
+      "customerName": "Grace Wanjiku",
+      "accountRef": "ISP-001",
+      "gateway": "daraja-sandbox",
+      "gatewayStatus": "configured"
+    },
+    {
       "id": "1",
       "transactionId": "SHK7G4D2F1",
       "phone": "0712345678",
@@ -323,8 +335,8 @@
     },
     {
       "month": "Mar",
-      "revenue": 178500,
-      "collected": 168000
+      "revenue": 178520,
+      "collected": 168020
     }
   ],
   "plans": [
@@ -358,10 +370,10 @@
       "plan": "Business 50Mbps",
       "amount": 12000,
       "dueDate": "2026-04-01",
-      "status": "unpaid",
+      "status": "paid",
       "period": "2026-03",
       "createdAt": "2026-03-23 08:01",
-      "paidAt": ""
+      "paidAt": "2026-03-26 11:08"
     },
     {
       "id": "4",
@@ -415,6 +427,40 @@
   "radiusAuthLogs": [],
   "routerActionLogs": [],
   "auditLogs": [
+    {
+      "id": "14",
+      "timestamp": "2026-03-26 12:14",
+      "type": "payment.received",
+      "actor": "admin@billit.local",
+      "customerId": "1",
+      "amount": 20,
+      "transactionId": "STKMN7FPX0J93DC2CD7"
+    },
+    {
+      "id": "13",
+      "timestamp": "2026-03-26 12:01",
+      "type": "auth.login.success",
+      "actor": "admin@billit.local",
+      "userId": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+      "sourceIp": "::1"
+    },
+    {
+      "id": "12",
+      "timestamp": "2026-03-26 11:08",
+      "type": "invoice.paid",
+      "actor": "admin@billit.local",
+      "invoiceId": "5",
+      "customerId": "5",
+      "amount": 12000
+    },
+    {
+      "id": "11",
+      "timestamp": "2026-03-26 11:05",
+      "type": "auth.login.success",
+      "actor": "admin@billit.local",
+      "userId": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+      "sourceIp": "::1"
+    },
     {
       "id": "10",
       "timestamp": "2026-03-23 08:01",
