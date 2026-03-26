@@ -11,6 +11,7 @@ import {
   Package,
   ReceiptText,
   BarChart3,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,7 @@ const navItems = [
   { id: 'detection', label: 'User Detection', icon: Radar },
   { id: 'mpesa', label: 'M-Pesa Payments', icon: Smartphone },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
+  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 export default function DashboardSidebar({ activePage, onNavigate }: SidebarProps) {

@@ -10,6 +10,7 @@ import RoutersPage from './RoutersPage';
 import DetectionPage from './DetectionPage';
 import MpesaPage from './MpesaPage';
 import ReportsPage from './ReportsPage';
+import SettingsPage from './SettingsPage';
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   overview: { title: 'Dashboard', subtitle: 'ISP billing & network overview' },
@@ -20,6 +21,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   detection: { title: 'User Detection', subtitle: 'PPPoE, DHCP & MAC-based device detection' },
   mpesa: { title: 'M-Pesa Payments', subtitle: 'STK Push & transaction history' },
   reports: { title: 'Reports', subtitle: 'Revenue and operational logs' },
+  settings: { title: 'Settings', subtitle: 'Company profile, billing, and payment configuration' },
 };
 
 export default function Index() {
@@ -190,6 +192,7 @@ export default function Index() {
           {activePage === 'detection' && <DetectionPage />}
           {activePage === 'mpesa' && <MpesaPage />}
           {activePage === 'reports' && <ReportsPage />}
+          {activePage === 'settings' && <SettingsPage />}
         </main>
       </div>
     </div>

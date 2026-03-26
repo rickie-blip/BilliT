@@ -16,6 +16,37 @@ export interface Customer {
   balance: number;
 }
 
+export interface OrganizationSettings {
+  companyName: string;
+  tradingName: string;
+  registrationNumber: string;
+  taxPin: string;
+  supportEmail: string;
+  supportPhone: string;
+  address: string;
+  website: string;
+  invoicePrefix: string;
+  billingCycleDay: number;
+  gracePeriodDays: number;
+  currency: string;
+  timezone: string;
+  mpesaConsumerKey: string;
+  mpesaConsumerSecret: string;
+  mpesaShortcode: string;
+  mpesaPasskey: string;
+  mpesaCallbackUrl: string;
+  smsProvider: string;
+  smsSenderId: string;
+  emailHost: string;
+  emailPort: number;
+  emailUser: string;
+  emailFrom: string;
+  radiusServer: string;
+  radiusSecret: string;
+  primaryRouter: string;
+  notes: string;
+}
+
 export interface RouterDevice {
   id: string;
   name: string;

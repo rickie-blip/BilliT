@@ -4,6 +4,7 @@ import type {
   DetectedUser,
   Invoice,
   MpesaTransaction,
+  OrganizationSettings,
   Plan,
   ReportSummary,
   RouterDevice,
@@ -117,6 +118,37 @@ export const getRouters = () => fetchJson<RouterDevice[]>("/api/routers");
 export const getDetectedUsers = () => fetchJson<DetectedUser[]>("/api/detected-users");
 export const getMpesaTransactions = () =>
   fetchJson<MpesaTransaction[]>("/api/mpesa/transactions");
+
+export const getSettings = () => fetchJson<OrganizationSettings>("/api/settings");
+
+export const saveSettings = (payload: OrganizationSettings) =>
+  fetchJson<OrganizationSettings>("/api/settings", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+
+export interface CreateCustomerPayload {
+  name: string;
+  phone: string;
+  email?: string;
+  location?: string;
+  plan: string;
+  monthlyFee: number;
+  status?: "active" | "suspended" | "expired" | "disabled";
+  connectionType?: "PPPoE" | "DHCP" | "Static" | "Hotspot";
+  macAddress?: string;
+  ipAddress?: string;
+  router?: string;
+  lastPayment?: string;
+  dueDate?: string;
+  balance?: number;
+}
+
+export const createCustomer = (payload: CreateCustomerPayload) =>
+  fetchJson<Customer>("/api/customers", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 
 export const createRouter = (payload: {
   name: string;

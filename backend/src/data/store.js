@@ -13,6 +13,8 @@ const normalizeStore = (store) => {
   normalized.radiusAuthLogs = Array.isArray(store.radiusAuthLogs) ? store.radiusAuthLogs : [];
   normalized.routerActionLogs = Array.isArray(store.routerActionLogs) ? store.routerActionLogs : [];
   normalized.auditLogs = Array.isArray(store.auditLogs) ? store.auditLogs : [];
+  normalized.organizationSettings =
+    store.organizationSettings && typeof store.organizationSettings === 'object' ? store.organizationSettings : {};
   return normalized;
 };
 

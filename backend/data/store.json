@@ -95,6 +95,23 @@
       "lastPayment": "2026-03-23",
       "dueDate": "2026-01-20",
       "balance": 3000
+    },
+    {
+      "id": "7",
+      "name": "Derrick Kiprotich Korir",
+      "phone": "0719542172",
+      "email": "Rickiedale0@gmail.com",
+      "location": "",
+      "plan": "Okoa",
+      "monthlyFee": 30,
+      "status": "active",
+      "connectionType": "Hotspot",
+      "macAddress": "Ruaraka",
+      "ipAddress": "",
+      "router": "Estate-Switch",
+      "lastPayment": "",
+      "dueDate": "2026-04-25",
+      "balance": 0
     }
   ],
   "routers": [
@@ -244,6 +261,84 @@
     }
   ],
   "mpesaTransactions": [
+    {
+      "id": "9",
+      "transactionId": "STKMN7J8SR593187030",
+      "phone": "0719542172",
+      "amount": 30,
+      "status": "pending",
+      "timestamp": "2026-03-26 13:53",
+      "customerId": "7",
+      "customerName": "Derrick Kiprotich Korir",
+      "accountRef": "ISP-007",
+      "gateway": "daraja",
+      "gatewayStatus": "queued",
+      "receiptNumber": "",
+      "merchantRequestId": "8e8c-4336-95d8-3f26d421cf203442",
+      "checkoutRequestId": "ws_CO_26032026165314036719542172",
+      "resultCode": 0,
+      "resultDesc": "Success. Request accepted for processing",
+      "settledAt": "",
+      "gatewayResponse": {
+        "MerchantRequestID": "8e8c-4336-95d8-3f26d421cf203442",
+        "CheckoutRequestID": "ws_CO_26032026165314036719542172",
+        "ResponseCode": "0",
+        "ResponseDescription": "Success. Request accepted for processing",
+        "CustomerMessage": "Success. Request accepted for processing"
+      }
+    },
+    {
+      "id": "8",
+      "transactionId": "STKMN7J8BTD2EC976D3",
+      "phone": "0719542172",
+      "amount": 30,
+      "status": "pending",
+      "timestamp": "2026-03-26 13:52",
+      "customerId": "7",
+      "customerName": "Derrick Kiprotich Korir",
+      "accountRef": "ISP-007",
+      "gateway": "daraja",
+      "gatewayStatus": "queued",
+      "receiptNumber": "",
+      "merchantRequestId": "8e8c-4336-95d8-3f26d421cf203430",
+      "checkoutRequestId": "ws_CO_26032026165252161719542172",
+      "resultCode": 0,
+      "resultDesc": "Success. Request accepted for processing",
+      "settledAt": "",
+      "gatewayResponse": {
+        "MerchantRequestID": "8e8c-4336-95d8-3f26d421cf203430",
+        "CheckoutRequestID": "ws_CO_26032026165252161719542172",
+        "ResponseCode": "0",
+        "ResponseDescription": "Success. Request accepted for processing",
+        "CustomerMessage": "Success. Request accepted for processing"
+      }
+    },
+    {
+      "id": "7",
+      "transactionId": "STKMN7J7G4AF77E7E79",
+      "phone": "0719542172",
+      "amount": 30,
+      "status": "pending",
+      "timestamp": "2026-03-26 13:52",
+      "customerId": "7",
+      "customerName": "Derrick Kiprotich Korir",
+      "accountRef": "ISP-007",
+      "gateway": "daraja",
+      "gatewayStatus": "queued",
+      "receiptNumber": "",
+      "merchantRequestId": "332d-4d1b-8dbe-07c4c5cce21c26486",
+      "checkoutRequestId": "ws_CO_26032026165211401719542172",
+      "resultCode": 0,
+      "resultDesc": "Success. Request accepted for processing",
+      "settledAt": "",
+      "gatewayResponse": {
+        "MerchantRequestID": "332d-4d1b-8dbe-07c4c5cce21c26486",
+        "CheckoutRequestID": "ws_CO_26032026165211401719542172",
+        "ResponseCode": "0",
+        "ResponseDescription": "Success. Request accepted for processing",
+        "CustomerMessage": "Success. Request accepted for processing"
+      }
+    },
     {
       "id": "6",
       "transactionId": "STKMN7FPX0J93DC2CD7",
@@ -427,6 +522,51 @@
   "radiusAuthLogs": [],
   "routerActionLogs": [],
   "auditLogs": [
+    {
+      "id": "19",
+      "timestamp": "2026-03-26 13:53",
+      "type": "payment.requested",
+      "actor": "admin@billit.local",
+      "customerId": "7",
+      "amount": 30,
+      "transactionId": "STKMN7J8SR593187030",
+      "checkoutRequestId": "ws_CO_26032026165314036719542172"
+    },
+    {
+      "id": "18",
+      "timestamp": "2026-03-26 13:52",
+      "type": "payment.requested",
+      "actor": "admin@billit.local",
+      "customerId": "7",
+      "amount": 30,
+      "transactionId": "STKMN7J8BTD2EC976D3",
+      "checkoutRequestId": "ws_CO_26032026165252161719542172"
+    },
+    {
+      "id": "17",
+      "timestamp": "2026-03-26 13:52",
+      "type": "payment.requested",
+      "actor": "admin@billit.local",
+      "customerId": "7",
+      "amount": 30,
+      "transactionId": "STKMN7J7G4AF77E7E79",
+      "checkoutRequestId": "ws_CO_26032026165211401719542172"
+    },
+    {
+      "id": "16",
+      "timestamp": "2026-03-26 13:51",
+      "type": "customer.created",
+      "actor": "admin@billit.local",
+      "customerId": "7"
+    },
+    {
+      "id": "15",
+      "timestamp": "2026-03-26 13:45",
+      "type": "auth.login.success",
+      "actor": "admin@billit.local",
+      "userId": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+      "sourceIp": "::1"
+    },
     {
       "id": "14",
       "timestamp": "2026-03-26 12:14",

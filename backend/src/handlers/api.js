@@ -70,6 +70,37 @@ const currentPeriod = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 };
 
+const defaultOrganizationSettings = () => ({
+  companyName: "",
+  tradingName: "",
+  registrationNumber: "",
+  taxPin: "",
+  supportEmail: "",
+  supportPhone: "",
+  address: "",
+  website: "",
+  invoicePrefix: "INV",
+  billingCycleDay: 1,
+  gracePeriodDays: 7,
+  currency: "KES",
+  timezone: "Africa/Nairobi",
+  mpesaConsumerKey: "",
+  mpesaConsumerSecret: "",
+  mpesaShortcode: "",
+  mpesaPasskey: "",
+  mpesaCallbackUrl: "",
+  smsProvider: "",
+  smsSenderId: "",
+  emailHost: "",
+  emailPort: 587,
+  emailUser: "",
+  emailFrom: "",
+  radiusServer: "",
+  radiusSecret: "",
+  primaryRouter: "",
+  notes: "",
+});
+
 const getRestCatalog = () => ({
   service: "billit-backend",
   style: "REST",
@@ -104,6 +135,8 @@ const getRestCatalog = () => ({
     { method: "POST", path: "/api/mpesa/callback", description: "Safaricom STK callback" },
     { method: "GET", path: "/api/reports/summary", description: "Report summary" },
     { method: "GET", path: "/api/reports/logs", description: "Audit and router logs" },
+    { method: "GET", path: "/api/settings", description: "Get company settings" },
+    { method: "PATCH", path: "/api/settings", description: "Update company settings" },
   ],
 });
 
@@ -326,6 +359,64 @@ export const handleApiRequest = async (req, res) => {
     }
 
     sendJson(res, 200, sanitizeUser(user));
+    return;
+  }
+
+  if (url.pathname === "/api/settings" && method === "GET") {
+    const actor = await resolveAuthUser(req);
+    if (!enforceRole(res, actor, ["ADMIN"])) {
+      return;
+    }
+
+    sendJson(res, 200, { ...defaultOrganizationSettings(), ...store.organizationSettings });
+    return;
+  }
+
+  if (url.pathname === "/api/settings" && method === "PATCH") {
+    const actor = await resolveAuthUser(req);
+    if (!enforceRole(res, actor, ["ADMIN"])) {
+      return;
+    }
+
+    const body = await readJsonBody(req);
+    const currentSettings = { ...defaultOrganizationSettings(), ...store.organizationSettings };
+    const nextSettings = {
+      ...currentSettings,
+      ...body,
+      companyName: body.companyName !== undefined ? String(body.companyName) : currentSettings.companyName,
+      tradingName: body.tradingName !== undefined ? String(body.tradingName) : currentSettings.tradingName,
+      registrationNumber: body.registrationNumber !== undefined ? String(body.registrationNumber) : currentSettings.registrationNumber,
+      taxPin: body.taxPin !== undefined ? String(body.taxPin) : currentSettings.taxPin,
+      supportEmail: body.supportEmail !== undefined ? String(body.supportEmail) : currentSettings.supportEmail,
+      supportPhone: body.supportPhone !== undefined ? String(body.supportPhone) : currentSettings.supportPhone,
+      address: body.address !== undefined ? String(body.address) : currentSettings.address,
+      website: body.website !== undefined ? String(body.website) : currentSettings.website,
+      invoicePrefix: body.invoicePrefix !== undefined ? String(body.invoicePrefix) : currentSettings.invoicePrefix,
+      billingCycleDay: parseNumber(body.billingCycleDay ?? currentSettings.billingCycleDay, currentSettings.billingCycleDay),
+      gracePeriodDays: parseNumber(body.gracePeriodDays ?? currentSettings.gracePeriodDays, currentSettings.gracePeriodDays),
+      currency: body.currency !== undefined ? String(body.currency) : currentSettings.currency,
+      timezone: body.timezone !== undefined ? String(body.timezone) : currentSettings.timezone,
+      mpesaConsumerKey: body.mpesaConsumerKey !== undefined ? String(body.mpesaConsumerKey) : currentSettings.mpesaConsumerKey,
+      mpesaConsumerSecret: body.mpesaConsumerSecret !== undefined ? String(body.mpesaConsumerSecret) : currentSettings.mpesaConsumerSecret,
+      mpesaShortcode: body.mpesaShortcode !== undefined ? String(body.mpesaShortcode) : currentSettings.mpesaShortcode,
+      mpesaPasskey: body.mpesaPasskey !== undefined ? String(body.mpesaPasskey) : currentSettings.mpesaPasskey,
+      mpesaCallbackUrl: body.mpesaCallbackUrl !== undefined ? String(body.mpesaCallbackUrl) : currentSettings.mpesaCallbackUrl,
+      smsProvider: body.smsProvider !== undefined ? String(body.smsProvider) : currentSettings.smsProvider,
+      smsSenderId: body.smsSenderId !== undefined ? String(body.smsSenderId) : currentSettings.smsSenderId,
+      emailHost: body.emailHost !== undefined ? String(body.emailHost) : currentSettings.emailHost,
+      emailPort: parseNumber(body.emailPort ?? currentSettings.emailPort, currentSettings.emailPort),
+      emailUser: body.emailUser !== undefined ? String(body.emailUser) : currentSettings.emailUser,
+      emailFrom: body.emailFrom !== undefined ? String(body.emailFrom) : currentSettings.emailFrom,
+      radiusServer: body.radiusServer !== undefined ? String(body.radiusServer) : currentSettings.radiusServer,
+      radiusSecret: body.radiusSecret !== undefined ? String(body.radiusSecret) : currentSettings.radiusSecret,
+      primaryRouter: body.primaryRouter !== undefined ? String(body.primaryRouter) : currentSettings.primaryRouter,
+      notes: body.notes !== undefined ? String(body.notes) : currentSettings.notes,
+    };
+
+    store.organizationSettings = nextSettings;
+    appendAuditLog(store, { type: "settings.updated", actor: actor.email });
+    await writeStore(store);
+    sendJson(res, 200, nextSettings);
     return;
   }
 
