@@ -1,10 +1,15 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dataDirectory, seedUsersFile, usersFile } from "../config/paths.js";
 
+const normalizeUser = (user) => ({
+  ...user,
+  companyId: String(user?.companyId || "default"),
+});
+
 const readUsers = async () => {
   const raw = await readFile(usersFile, "utf-8");
   const parsed = JSON.parse(raw);
-  return Array.isArray(parsed) ? parsed : [];
+  return Array.isArray(parsed) ? parsed.map(normalizeUser) : [];
 };
 
 const writeUsers = async (users) => {
@@ -42,7 +47,7 @@ export const listUsers = async () => {
   return users.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
 };
 
-export const createUser = async ({ id, email, fullName, passwordHash, role }) => {
+export const createUser = async ({ id, email, fullName, passwordHash, role, companyId }) => {
   const users = await readUsers();
   const now = new Date().toISOString();
   const user = {
@@ -51,6 +56,7 @@ export const createUser = async ({ id, email, fullName, passwordHash, role }) =>
     fullName,
     passwordHash,
     role,
+    companyId: String(companyId || "default"),
     isActive: true,
     createdAt: now,
     updatedAt: now,

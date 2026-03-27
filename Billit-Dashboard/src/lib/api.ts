@@ -16,6 +16,7 @@ const API_BASE_URL = rawBaseUrl.endsWith("/")
   : rawBaseUrl;
 
 const ACCESS_TOKEN_KEY = "billit_access_token";
+const COMPANY_ID_KEY = "billit_company_id";
 
 const toUrl = (path: string) => `${API_BASE_URL}${path}`;
 
@@ -24,6 +25,7 @@ export interface AuthUser {
   email: string;
   fullName: string;
   role: "ADMIN" | "STAFF" | "AGENT";
+  companyId: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -40,12 +42,22 @@ interface LoginResponse {
 
 export const getAccessToken = (): string | null => localStorage.getItem(ACCESS_TOKEN_KEY);
 
+export const getCompanyId = (): string | null => localStorage.getItem(COMPANY_ID_KEY);
+
 export const setAccessToken = (token: string) => {
   localStorage.setItem(ACCESS_TOKEN_KEY, token);
 };
 
+export const setCompanyId = (companyId: string) => {
+  localStorage.setItem(COMPANY_ID_KEY, companyId);
+};
+
 export const clearAccessToken = () => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
+};
+
+export const clearCompanyId = () => {
+  localStorage.removeItem(COMPANY_ID_KEY);
 };
 
 const fetchJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
@@ -54,6 +66,7 @@ const fetchJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(getCompanyId() ? { "X-Company-ID": getCompanyId() as string } : {}),
       ...(init?.headers || {}),
     },
     ...init,
@@ -73,6 +86,7 @@ const fetchJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
 
     if (response.status === 401) {
       clearAccessToken();
+      clearCompanyId();
     }
 
     throw new Error(message);
@@ -92,6 +106,7 @@ export const login = async (payload: { email: string; password: string }) => {
   });
 
   setAccessToken(data.accessToken);
+  setCompanyId(data.user.companyId);
   return data;
 };
 
@@ -100,6 +115,7 @@ export const register = (payload: {
   fullName: string;
   password: string;
   role: "ADMIN" | "STAFF" | "AGENT";
+  companyId?: string;
 }) =>
   fetchJson<AuthUser>("/api/auth/register", {
     method: "POST",
@@ -110,6 +126,7 @@ export const getCurrentUser = () => fetchJson<AuthUser>("/api/auth/me");
 
 export const logout = () => {
   clearAccessToken();
+  clearCompanyId();
 };
 
 export const getDashboard = () => fetchJson<DashboardResponse>("/api/dashboard");
@@ -279,3 +296,10 @@ export const disconnectRouterUser = (routerId: string, username: string) =>
     method: "POST",
     body: JSON.stringify({ username }),
   });
+
+
+
+
+
+
+

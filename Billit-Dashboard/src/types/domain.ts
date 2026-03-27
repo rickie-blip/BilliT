@@ -30,11 +30,11 @@ export interface OrganizationSettings {
   gracePeriodDays: number;
   currency: string;
   timezone: string;
-  mpesaConsumerKey: string;
-  mpesaConsumerSecret: string;
-  mpesaShortcode: string;
-  mpesaPasskey: string;
-  mpesaCallbackUrl: string;
+  mpesaPaymentType: 'paybill' | 'till' | 'phone' | '';
+  mpesaPaybill: string;
+  mpesaAccount: string;
+  mpesaTill: string;
+  mpesaPhone: string;
   smsProvider: string;
   smsSenderId: string;
   emailHost: string;

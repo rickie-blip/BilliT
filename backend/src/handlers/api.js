@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { dataFile } from "../config/paths.js";
 import { readStore, writeStore } from "../data/store.js";
+import {
+  getOrganizationSettingsForCompany,
+  normalizeCompanyId,
+  setOrganizationSettingsForCompany,
+} from "../data/settings.js";
 import { countUsers, createUser, findUserByEmail, findUserById, listUsers } from "../data/users.js";
 import {
   extractBearerToken,
@@ -70,36 +75,7 @@ const currentPeriod = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 };
 
-const defaultOrganizationSettings = () => ({
-  companyName: "",
-  tradingName: "",
-  registrationNumber: "",
-  taxPin: "",
-  supportEmail: "",
-  supportPhone: "",
-  address: "",
-  website: "",
-  invoicePrefix: "INV",
-  billingCycleDay: 1,
-  gracePeriodDays: 7,
-  currency: "KES",
-  timezone: "Africa/Nairobi",
-  mpesaConsumerKey: "",
-  mpesaConsumerSecret: "",
-  mpesaShortcode: "",
-  mpesaPasskey: "",
-  mpesaCallbackUrl: "",
-  smsProvider: "",
-  smsSenderId: "",
-  emailHost: "",
-  emailPort: 587,
-  emailUser: "",
-  emailFrom: "",
-  radiusServer: "",
-  radiusSecret: "",
-  primaryRouter: "",
-  notes: "",
-});
+
 
 const getRestCatalog = () => ({
   service: "billit-backend",
@@ -229,6 +205,24 @@ const generateInvoicesForCurrentPeriod = (store, actorEmail) => {
   return generated;
 };
 
+const resolveCompanyId = (req, actor, url) => {
+  const headerValue = req.headers["x-company-id"];
+  if (typeof headerValue === "string" && headerValue.trim()) {
+    return normalizeCompanyId(headerValue);
+  }
+
+  const queryValue = url.searchParams.get("companyId");
+  if (queryValue && queryValue.trim()) {
+    return normalizeCompanyId(queryValue);
+  }
+
+  if (actor?.companyId) {
+    return normalizeCompanyId(actor.companyId);
+  }
+
+  return "default";
+};
+
 export const handleApiRequest = async (req, res) => {
   const method = req.method || "GET";
   const url = new URL(req.url || "/", `http://${req.headers.host}`);
@@ -292,6 +286,7 @@ export const handleApiRequest = async (req, res) => {
       fullName: String(body.fullName),
       passwordHash,
       role,
+      companyId: body.companyId || actor?.companyId || "default",
     });
 
     appendAuditLog(store, {
@@ -368,7 +363,8 @@ export const handleApiRequest = async (req, res) => {
       return;
     }
 
-    sendJson(res, 200, { ...defaultOrganizationSettings(), ...store.organizationSettings });
+    const companyId = resolveCompanyId(req, actor, url);
+    sendJson(res, 200, getOrganizationSettingsForCompany(store, companyId));
     return;
   }
 
@@ -379,7 +375,8 @@ export const handleApiRequest = async (req, res) => {
     }
 
     const body = await readJsonBody(req);
-    const currentSettings = { ...defaultOrganizationSettings(), ...store.organizationSettings };
+    const companyId = resolveCompanyId(req, actor, url);
+    const currentSettings = getOrganizationSettingsForCompany(store, companyId);
     const nextSettings = {
       ...currentSettings,
       ...body,
@@ -413,7 +410,7 @@ export const handleApiRequest = async (req, res) => {
       notes: body.notes !== undefined ? String(body.notes) : currentSettings.notes,
     };
 
-    store.organizationSettings = nextSettings;
+    setOrganizationSettingsForCompany(store, companyId, nextSettings);
     appendAuditLog(store, { type: "settings.updated", actor: actor.email });
     await writeStore(store);
     sendJson(res, 200, nextSettings);
@@ -1105,6 +1102,9 @@ export const handleApiRequest = async (req, res) => {
 
   sendJson(res, 404, { message: "Not found" });
 };
+
+
+
 
 
 

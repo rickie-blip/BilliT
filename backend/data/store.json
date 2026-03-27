@@ -520,8 +520,57 @@
     }
   ],
   "radiusAuthLogs": [],
-  "routerActionLogs": [],
+  "routerActionLogs": [
+    {
+      "id": "3",
+      "timestamp": "2026-03-27 06:05",
+      "action": "router.disconnect-user",
+      "actor": "admin@billit.local",
+      "routerId": "1",
+      "username": "Peter Kamau"
+    },
+    {
+      "id": "2",
+      "timestamp": "2026-03-27 06:05",
+      "action": "router.disconnect-user",
+      "actor": "admin@billit.local",
+      "routerId": "1",
+      "username": "Grace Wanjiku"
+    },
+    {
+      "id": "1",
+      "timestamp": "2026-03-27 06:05",
+      "action": "router.disconnect-user",
+      "actor": "admin@billit.local",
+      "routerId": "1",
+      "username": "Grace Wanjiku"
+    }
+  ],
   "auditLogs": [
+    {
+      "id": "22",
+      "timestamp": "2026-03-27 06:09",
+      "type": "auth.login.success",
+      "actor": "admin@billit.local",
+      "userId": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+      "sourceIp": "::1"
+    },
+    {
+      "id": "21",
+      "timestamp": "2026-03-27 05:56",
+      "type": "auth.login.success",
+      "actor": "admin@billit.local",
+      "userId": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+      "sourceIp": "::1"
+    },
+    {
+      "id": "20",
+      "timestamp": "2026-03-27 05:40",
+      "type": "auth.login.success",
+      "actor": "admin@billit.local",
+      "userId": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+      "sourceIp": "::1"
+    },
     {
       "id": "19",
       "timestamp": "2026-03-26 13:53",
@@ -686,5 +735,6 @@
       "actor": "system",
       "customerId": "6"
     }
-  ]
+  ],
+  "organizationSettingsByCompany": {}
 }

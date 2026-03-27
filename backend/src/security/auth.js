@@ -12,6 +12,7 @@ export const signAccessToken = (user) =>
       sub: user.id,
       email: user.email,
       role: user.role,
+      companyId: user.companyId || "default",
     },
     JWT_ACCESS_SECRET,
     { expiresIn: JWT_ACCESS_EXPIRES_IN }
@@ -38,6 +39,7 @@ export const sanitizeUser = (user) => ({
   email: user.email,
   fullName: user.fullName,
   role: user.role,
+  companyId: user.companyId || "default",
   isActive: user.isActive,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,

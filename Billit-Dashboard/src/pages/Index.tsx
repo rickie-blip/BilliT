@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import DashboardSidebar from '@/components/DashboardSidebar';
 import DashboardHeader from '@/components/DashboardHeader';
-import { clearAccessToken, getAccessToken, getCurrentUser, login, logout, register, type AuthUser } from '@/lib/api';
+import { clearAccessToken, clearCompanyId, getAccessToken, getCurrentUser, login, logout, register, setCompanyId, type AuthUser } from '@/lib/api';
 import OverviewPage from './OverviewPage';
 import CustomersPage from './CustomersPage';
 import PlansPage from './PlansPage';
@@ -32,6 +32,7 @@ export default function Index() {
   const [email, setEmail] = useState('admin@billit.local');
   const [password, setPassword] = useState('ChangeMe123!');
   const [fullName, setFullName] = useState('Platform Admin');
+  const [companyId, setCompanyIdState] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSubmitting, setAuthSubmitting] = useState(false);
 
@@ -45,7 +46,10 @@ export default function Index() {
     }
 
     getCurrentUser()
-      .then((user) => setCurrentUser(user))
+      .then((user) => {
+        setCompanyId(user.companyId);
+        setCurrentUser(user);
+      })
       .catch(() => {
         clearAccessToken();
         setCurrentUser(null);
@@ -72,10 +76,12 @@ export default function Index() {
           fullName,
           password,
           role: 'ADMIN',
+          companyId,
         });
       }
 
       const response = await login({ email, password });
+      setCompanyId(response.user.companyId);
       setCurrentUser(response.user);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Authentication failed');
@@ -125,14 +131,29 @@ export default function Index() {
 
           <form className="space-y-3" onSubmit={handleAuth}>
             {authMode === 'bootstrap' && (
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Full Name</label>
-                <input
-                  value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
-                  className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                  required
-                />
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Company ID</label>
+                  <input
+                    value={companyId}
+                    onChange={(event) => setCompanyIdState(event.target.value)}
+                    className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
+                    placeholder="acme-isp"
+                    required
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Used to isolate saved credentials and company settings.
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Full Name</label>
+                  <input
+                    value={fullName}
+                    onChange={(event) => setFullName(event.target.value)}
+                    className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
+                    required
+                  />
+                </div>
               </div>
             )}
 
@@ -198,3 +219,4 @@ export default function Index() {
     </div>
   );
 }
+

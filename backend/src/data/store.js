@@ -1,5 +1,6 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dataDirectory, dataFile, seedDataFile } from "../config/paths.js";
+import { normalizeSettingsStore } from "./settings.js";
 
 const normalizeStore = (store) => {
   const normalized = { ...store };
@@ -13,9 +14,7 @@ const normalizeStore = (store) => {
   normalized.radiusAuthLogs = Array.isArray(store.radiusAuthLogs) ? store.radiusAuthLogs : [];
   normalized.routerActionLogs = Array.isArray(store.routerActionLogs) ? store.routerActionLogs : [];
   normalized.auditLogs = Array.isArray(store.auditLogs) ? store.auditLogs : [];
-  normalized.organizationSettings =
-    store.organizationSettings && typeof store.organizationSettings === 'object' ? store.organizationSettings : {};
-  return normalized;
+  return normalizeSettingsStore(normalized);
 };
 
 export const ensureDataStore = async () => {

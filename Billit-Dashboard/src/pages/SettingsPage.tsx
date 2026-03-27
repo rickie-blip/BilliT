@@ -1,6 +1,6 @@
-﻿import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getSettings, saveSettings } from '@/lib/api';
+import { getCompanyId, getSettings, saveSettings } from '@/lib/api';
 import type { OrganizationSettings } from '@/types/domain';
 
 const defaultSettings = (): OrganizationSettings => ({
@@ -17,11 +17,11 @@ const defaultSettings = (): OrganizationSettings => ({
   gracePeriodDays: 7,
   currency: 'KES',
   timezone: 'Africa/Nairobi',
-  mpesaConsumerKey: '',
-  mpesaConsumerSecret: '',
-  mpesaShortcode: '',
-  mpesaPasskey: '',
-  mpesaCallbackUrl: '',
+  mpesaPaymentType: '',
+  mpesaPaybill: '',
+  mpesaAccount: '',
+  mpesaTill: '',
+  mpesaPhone: '',
   smsProvider: '',
   smsSenderId: '',
   emailHost: '',
@@ -52,11 +52,11 @@ const toFormState = (settings: OrganizationSettings): SettingsFormState => ({
   gracePeriodDays: String(settings.gracePeriodDays ?? 7),
   currency: settings.currency || 'KES',
   timezone: settings.timezone || 'Africa/Nairobi',
-  mpesaConsumerKey: settings.mpesaConsumerKey || '',
-  mpesaConsumerSecret: settings.mpesaConsumerSecret || '',
-  mpesaShortcode: settings.mpesaShortcode || '',
-  mpesaPasskey: settings.mpesaPasskey || '',
-  mpesaCallbackUrl: settings.mpesaCallbackUrl || '',
+  mpesaPaymentType: settings.mpesaPaymentType || '',
+  mpesaPaybill: settings.mpesaPaybill || '',
+  mpesaAccount: settings.mpesaAccount || '',
+  mpesaTill: settings.mpesaTill || '',
+  mpesaPhone: settings.mpesaPhone || '',
   smsProvider: settings.smsProvider || '',
   smsSenderId: settings.smsSenderId || '',
   emailHost: settings.emailHost || '',
@@ -83,11 +83,11 @@ const toPayload = (form: SettingsFormState): OrganizationSettings => ({
   gracePeriodDays: Number(form.gracePeriodDays) || 7,
   currency: form.currency.trim() || 'KES',
   timezone: form.timezone.trim() || 'Africa/Nairobi',
-  mpesaConsumerKey: form.mpesaConsumerKey.trim(),
-  mpesaConsumerSecret: form.mpesaConsumerSecret.trim(),
-  mpesaShortcode: form.mpesaShortcode.trim(),
-  mpesaPasskey: form.mpesaPasskey.trim(),
-  mpesaCallbackUrl: form.mpesaCallbackUrl.trim(),
+  mpesaPaymentType: form.mpesaPaymentType.trim() as OrganizationSettings['mpesaPaymentType'],
+  mpesaPaybill: form.mpesaPaybill.trim(),
+  mpesaAccount: form.mpesaAccount.trim(),
+  mpesaTill: form.mpesaTill.trim(),
+  mpesaPhone: form.mpesaPhone.trim(),
   smsProvider: form.smsProvider.trim(),
   smsSenderId: form.smsSenderId.trim(),
   emailHost: form.emailHost.trim(),
@@ -147,10 +147,11 @@ const Field = ({
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
+  const companyId = getCompanyId() || 'default';
   const [form, setForm] = useState<SettingsFormState>(() => toFormState(defaultSettings()));
 
   const { data: settings, isPending, isError, error } = useQuery({
-    queryKey: ['settings'],
+    queryKey: ['settings', companyId],
     queryFn: getSettings,
   });
 
@@ -164,7 +165,7 @@ export default function SettingsPage() {
     mutationFn: saveSettings,
     onSuccess: async (saved) => {
       setForm(toFormState(saved));
-      await queryClient.invalidateQueries({ queryKey: ['settings'] });
+      await queryClient.invalidateQueries({ queryKey: ['settings', companyId] });
     },
   });
 
@@ -242,15 +243,38 @@ export default function SettingsPage() {
       </SectionCard>
 
       <SectionCard
-        title="M-Pesa Settings"
-        description="Per-ISP Daraja credentials and callback details for STK Push payments."
+        title="M-Pesa Payment Details"
+        description="Where customers send money — choose your payment method and enter the destination details."
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Field label="Consumer Key" value={form.mpesaConsumerKey} onChange={(value) => update('mpesaConsumerKey', value)} password />
-          <Field label="Consumer Secret" value={form.mpesaConsumerSecret} onChange={(value) => update('mpesaConsumerSecret', value)} password />
-          <Field label="Shortcode / Paybill" value={form.mpesaShortcode} onChange={(value) => update('mpesaShortcode', value)} />
-          <Field label="Passkey" value={form.mpesaPasskey} onChange={(value) => update('mpesaPasskey', value)} password />
-          <Field label="Callback URL" value={form.mpesaCallbackUrl} onChange={(value) => update('mpesaCallbackUrl', value)} placeholder="https://.../api/mpesa/callback" />
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Payment Type</label>
+            <select
+              value={form.mpesaPaymentType}
+              onChange={(e) => update('mpesaPaymentType', e.target.value)}
+              className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
+            >
+              <option value="">Select payment type...</option>
+              <option value="paybill">Paybill</option>
+              <option value="till">Buy Goods (Till)</option>
+              <option value="phone">Phone Number (Send Money)</option>
+            </select>
+          </div>
+
+          {form.mpesaPaymentType === 'paybill' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Field label="Paybill Number" value={form.mpesaPaybill} onChange={(v) => update('mpesaPaybill', v)} placeholder="e.g. 400200" />
+              <Field label="Account Number" value={form.mpesaAccount} onChange={(v) => update('mpesaAccount', v)} placeholder="e.g. customer ID or name" />
+            </div>
+          )}
+
+          {form.mpesaPaymentType === 'till' && (
+            <Field label="Till Number" value={form.mpesaTill} onChange={(v) => update('mpesaTill', v)} placeholder="e.g. 123456" />
+          )}
+
+          {form.mpesaPaymentType === 'phone' && (
+            <Field label="Phone Number" value={form.mpesaPhone} onChange={(v) => update('mpesaPhone', v)} placeholder="e.g. 0712345678" />
+          )}
         </div>
       </SectionCard>
 
