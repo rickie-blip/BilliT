@@ -5,8 +5,30 @@ import { normalizeSettingsStore } from "./settings.js";
 const normalizeStore = (store) => {
   const normalized = { ...store };
   normalized.customers = Array.isArray(store.customers) ? store.customers : [];
-  normalized.routers = Array.isArray(store.routers) ? store.routers : [];
-  normalized.detectedUsers = Array.isArray(store.detectedUsers) ? store.detectedUsers : [];
+  normalized.routers = Array.isArray(store.routers)
+    ? store.routers.map((router) => ({
+        provider: "",
+        syncEnabled: false,
+        restBaseUrl: "",
+        credentialsKey: "",
+        allowInsecureTls: false,
+        lastSyncAt: "",
+        lastSyncStatus: "never",
+        lastSyncMessage: "",
+        bandwidth: {
+          up: 0,
+          down: 0,
+          ...(router?.bandwidth || {}),
+        },
+        ...router,
+      }))
+    : [];
+  normalized.detectedUsers = Array.isArray(store.detectedUsers)
+    ? store.detectedUsers.map((user) => ({
+        source: "fallback",
+        ...user,
+      }))
+    : [];
   normalized.mpesaTransactions = Array.isArray(store.mpesaTransactions) ? store.mpesaTransactions : [];
   normalized.revenueData = Array.isArray(store.revenueData) ? store.revenueData : [];
   normalized.plans = Array.isArray(store.plans) ? store.plans : [];

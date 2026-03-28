@@ -22,6 +22,7 @@ import { buildDashboardResponse, updateRevenueForCurrentMonth } from "../service
 import { billingQueue } from "../services/queue.js";
 import { sendDarajaStkPush } from "../services/mpesa.js";
 import { testRouterTcpConnection } from "../services/router.js";
+import { syncAllRouters } from "../services/mikrotikSync.js";
 import { formatTimestamp, hoursBetween, nextId } from "../utils/helpers.js";
 import { parsePath, readJsonBody, sendJson } from "../utils/http.js";
 
@@ -75,7 +76,32 @@ const currentPeriod = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 };
 
+const sanitizeRouterForClient = (router) => ({
+  ...router,
+  apiUsername: undefined,
+  apiPassword: undefined,
+});
 
+const sanitizeRoutersForClient = (routers) => routers.map(sanitizeRouterForClient);
+
+const resolveRouterTestConnectionTarget = (router) => {
+  if (router.restBaseUrl) {
+    try {
+      const parsed = new URL(router.restBaseUrl);
+      return {
+        host: parsed.hostname,
+        port: Number(parsed.port || (parsed.protocol === "https:" ? 443 : 80)),
+      };
+    } catch {
+      // Fall back to the legacy host/port fields below.
+    }
+  }
+
+  return {
+    host: router.ipAddress,
+    port: parseNumber(router.apiPort, 8728),
+  };
+};
 
 const getRestCatalog = () => ({
   service: "billit-backend",
@@ -105,6 +131,7 @@ const getRestCatalog = () => ({
     { method: "POST", path: "/api/radius/auth", description: "Simulate RADIUS authentication" },
     { method: "GET", path: "/api/radius/logs", description: "List RADIUS logs" },
     { method: "GET", path: "/api/detected-users", description: "List detected users" },
+    { method: "POST", path: "/api/detected-users/sync", description: "Sync live detected users from configured routers" },
     { method: "PATCH", path: "/api/detected-users/:id/assign", description: "Assign detected user to a customer" },
     { method: "GET", path: "/api/mpesa/transactions", description: "List M-Pesa transactions" },
     { method: "POST", path: "/api/mpesa/stk-push", description: "Initiate a real STK push payment" },
@@ -393,11 +420,11 @@ export const handleApiRequest = async (req, res) => {
       gracePeriodDays: parseNumber(body.gracePeriodDays ?? currentSettings.gracePeriodDays, currentSettings.gracePeriodDays),
       currency: body.currency !== undefined ? String(body.currency) : currentSettings.currency,
       timezone: body.timezone !== undefined ? String(body.timezone) : currentSettings.timezone,
-      mpesaConsumerKey: body.mpesaConsumerKey !== undefined ? String(body.mpesaConsumerKey) : currentSettings.mpesaConsumerKey,
-      mpesaConsumerSecret: body.mpesaConsumerSecret !== undefined ? String(body.mpesaConsumerSecret) : currentSettings.mpesaConsumerSecret,
-      mpesaShortcode: body.mpesaShortcode !== undefined ? String(body.mpesaShortcode) : currentSettings.mpesaShortcode,
-      mpesaPasskey: body.mpesaPasskey !== undefined ? String(body.mpesaPasskey) : currentSettings.mpesaPasskey,
-      mpesaCallbackUrl: body.mpesaCallbackUrl !== undefined ? String(body.mpesaCallbackUrl) : currentSettings.mpesaCallbackUrl,
+      mpesaPaymentType: body.mpesaPaymentType !== undefined ? String(body.mpesaPaymentType) : currentSettings.mpesaPaymentType,
+      mpesaPaybill: body.mpesaPaybill !== undefined ? String(body.mpesaPaybill) : currentSettings.mpesaPaybill,
+      mpesaAccount: body.mpesaAccount !== undefined ? String(body.mpesaAccount) : currentSettings.mpesaAccount,
+      mpesaTill: body.mpesaTill !== undefined ? String(body.mpesaTill) : currentSettings.mpesaTill,
+      mpesaPhone: body.mpesaPhone !== undefined ? String(body.mpesaPhone) : currentSettings.mpesaPhone,
       smsProvider: body.smsProvider !== undefined ? String(body.smsProvider) : currentSettings.smsProvider,
       smsSenderId: body.smsSenderId !== undefined ? String(body.smsSenderId) : currentSettings.smsSenderId,
       emailHost: body.emailHost !== undefined ? String(body.emailHost) : currentSettings.emailHost,
@@ -607,7 +634,7 @@ export const handleApiRequest = async (req, res) => {
   }
 
   if (url.pathname === "/api/routers" && method === "GET") {
-    sendJson(res, 200, store.routers);
+    sendJson(res, 200, sanitizeRoutersForClient(store.routers));
     return;
   }
 
@@ -639,15 +666,21 @@ export const handleApiRequest = async (req, res) => {
       },
       location: String(body.location || ""),
       apiPort: parseNumber(body.apiPort, 8728),
-      apiUsername: String(body.apiUsername || ""),
-      apiPassword: String(body.apiPassword || ""),
       allowedSourceIp: String(body.allowedSourceIp || ""),
+      provider: String(body.provider || "MikroTik"),
+      syncEnabled: Boolean(body.syncEnabled),
+      restBaseUrl: String(body.restBaseUrl || ""),
+      credentialsKey: String(body.credentialsKey || ""),
+      allowInsecureTls: Boolean(body.allowInsecureTls),
+      lastSyncAt: "",
+      lastSyncStatus: "never",
+      lastSyncMessage: "",
     };
 
     store.routers.push(router);
     appendRouterActionLog(store, { action: "router.added", actor: actor.email, routerId: router.id });
     await writeStore(store);
-    sendJson(res, 201, router);
+    sendJson(res, 201, sanitizeRouterForClient(router));
     return;
   }
 
@@ -688,9 +721,12 @@ export const handleApiRequest = async (req, res) => {
       down: parseNumber(body.bandwidthDown, router.bandwidth.down),
     };
     router.apiPort = parseNumber(body.apiPort, router.apiPort || 8728);
-    router.apiUsername = body.apiUsername !== undefined ? String(body.apiUsername) : router.apiUsername;
-    router.apiPassword = body.apiPassword !== undefined ? String(body.apiPassword) : router.apiPassword;
     router.allowedSourceIp = body.allowedSourceIp !== undefined ? String(body.allowedSourceIp) : router.allowedSourceIp;
+    router.provider = body.provider !== undefined ? String(body.provider) : router.provider;
+    router.syncEnabled = body.syncEnabled !== undefined ? Boolean(body.syncEnabled) : router.syncEnabled;
+    router.restBaseUrl = body.restBaseUrl !== undefined ? String(body.restBaseUrl) : router.restBaseUrl;
+    router.credentialsKey = body.credentialsKey !== undefined ? String(body.credentialsKey) : router.credentialsKey;
+    router.allowInsecureTls = body.allowInsecureTls !== undefined ? Boolean(body.allowInsecureTls) : router.allowInsecureTls;
     router.lastConfiguredAt = formatTimestamp();
     router.lastConfiguredBy = actor.email;
     if (body.command) {
@@ -704,7 +740,7 @@ export const handleApiRequest = async (req, res) => {
       command: router.lastCommand || "",
     });
     await writeStore(store);
-    sendJson(res, 200, router);
+    sendJson(res, 200, sanitizeRouterForClient(router));
     return;
   }
 
@@ -726,9 +762,10 @@ export const handleApiRequest = async (req, res) => {
       return;
     }
 
+    const connectionTarget = resolveRouterTestConnectionTarget(router);
     const result = await testRouterTcpConnection({
-      host: router.ipAddress,
-      port: parseNumber(router.apiPort, 8728),
+      host: connectionTarget.host,
+      port: connectionTarget.port,
       timeoutMs: 3000,
     });
 
@@ -955,6 +992,30 @@ export const handleApiRequest = async (req, res) => {
   }
   if (url.pathname === "/api/detected-users" && method === "GET") {
     sendJson(res, 200, store.detectedUsers);
+    return;
+  }
+
+  if (url.pathname === "/api/detected-users/sync" && method === "POST") {
+    const actor = await resolveAuthUser(req);
+    if (!enforceRole(res, actor, ["ADMIN", "STAFF"])) {
+      return;
+    }
+
+    const syncResult = await syncDetectedUsersFromRouters(store);
+    appendRouterActionLog(store, {
+      action: "detected-users.sync",
+      actor: actor.email,
+      result: syncResult.summary.usedLiveData ? "live" : "fallback",
+      message: `${syncResult.summary.successfulRouters} succeeded, ${syncResult.summary.failedRouters} failed, ${syncResult.summary.skippedRouters} skipped`,
+    });
+    await writeStore(store);
+    sendJson(res, 200, {
+      message: syncResult.summary.usedLiveData
+        ? "Detected users synced from routers"
+        : "No live router data available. Stored fallback data preserved",
+      ...syncResult,
+      routers: sanitizeRoutersForClient(syncResult.routers),
+    });
     return;
   }
 

@@ -1,0 +1,58 @@
+services:
+  # ── Backend API ──────────────────────────────────────────────────────────────
+  - type: web
+    name: billit-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 60000
+      - key: RATE_LIMIT_MAX
+        value: 120
+      # M-Pesa — fill these in the Render dashboard
+      - key: MPESA_ENVIRONMENT
+        value: production
+      - key: MPESA_CONSUMER_KEY
+        value: ""
+      - key: MPESA_CONSUMER_SECRET
+        value: ""
+      - key: MPESA_SHORTCODE
+        value: ""
+      - key: MPESA_PASSKEY
+        value: ""
+      - key: MPESA_CALLBACK_URL
+        value: ""
+      # Router credentials — add per-router blocks in the Render dashboard
+      # e.g. ROUTER_MAIN_USER / ROUTER_MAIN_PASS
+    disk:
+      name: billit-data
+      mountPath: /data
+      sizeGB: 1
+
+  # ── Frontend Static Site ──────────────────────────────────────────────────────
+  - type: web
+    name: billit-dashboard
+    runtime: static
+    rootDir: Billit-Dashboard
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        # Set this to your backend service URL after first deploy,
+        # e.g. https://billit-backend.onrender.com
+        value: ""
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

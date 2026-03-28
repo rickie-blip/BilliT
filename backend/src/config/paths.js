@@ -4,12 +4,18 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..", "..");
+
 const isVercel = Boolean(process.env.VERCEL);
+// Render mounts the persistent disk at /data (configured in render.yaml)
+const isRender = Boolean(process.env.RENDER);
 
-export const dataDirectory = isVercel
-  ? path.join("/tmp", "billit-data")
-  : path.join(projectRoot, "data");
+const resolveDataDirectory = () => {
+  if (isVercel) return path.join("/tmp", "billit-data");
+  if (isRender) return "/data";
+  return path.join(projectRoot, "data");
+};
 
+export const dataDirectory = resolveDataDirectory();
 export const dataFile = path.join(dataDirectory, "store.json");
 export const seedDataFile = path.join(projectRoot, "data", "seed-store.json");
 export const usersFile = path.join(dataDirectory, "users.json");

@@ -2,6 +2,8 @@ import type {
   Customer,
   DashboardResponse,
   DetectedUser,
+  DetectedUsersSyncResponse,
+  DetectedUsersSyncResponse,
   Invoice,
   MpesaTransaction,
   OrganizationSettings,
@@ -133,6 +135,11 @@ export const getDashboard = () => fetchJson<DashboardResponse>("/api/dashboard")
 export const getCustomers = () => fetchJson<Customer[]>("/api/customers");
 export const getRouters = () => fetchJson<RouterDevice[]>("/api/routers");
 export const getDetectedUsers = () => fetchJson<DetectedUser[]>("/api/detected-users");
+export const syncDetectedUsers = () =>
+  fetchJson<DetectedUsersSyncResponse>("/api/detected-users/sync", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
 export const getMpesaTransactions = () =>
   fetchJson<MpesaTransaction[]>("/api/mpesa/transactions");
 
@@ -167,17 +174,22 @@ export const createCustomer = (payload: CreateCustomerPayload) =>
     body: JSON.stringify(payload),
   });
 
-export const createRouter = (payload: {
+export interface CreateRouterPayload {
   name: string;
   model: string;
   ipAddress: string;
   location?: string;
   status?: "online" | "warning" | "offline";
   apiPort?: number;
-  apiUsername?: string;
-  apiPassword?: string;
   allowedSourceIp?: string;
-}) =>
+  provider?: string;
+  syncEnabled?: boolean;
+  restBaseUrl?: string;
+  credentialsKey?: string;
+  allowInsecureTls?: boolean;
+}
+
+export const createRouter = (payload: CreateRouterPayload) =>
   fetchJson<RouterDevice>("/api/routers", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -253,9 +265,12 @@ export interface ConfigureRouterPayload {
   bandwidthUp?: number;
   bandwidthDown?: number;
   apiPort?: number;
-  apiUsername?: string;
-  apiPassword?: string;
   allowedSourceIp?: string;
+  provider?: string;
+  syncEnabled?: boolean;
+  restBaseUrl?: string;
+  credentialsKey?: string;
+  allowInsecureTls?: boolean;
   command?: string;
 }
 
@@ -273,9 +288,12 @@ export const configureRouter = (payload: ConfigureRouterPayload) =>
       bandwidthUp: payload.bandwidthUp,
       bandwidthDown: payload.bandwidthDown,
       apiPort: payload.apiPort,
-      apiUsername: payload.apiUsername,
-      apiPassword: payload.apiPassword,
       allowedSourceIp: payload.allowedSourceIp,
+      provider: payload.provider,
+      syncEnabled: payload.syncEnabled,
+      restBaseUrl: payload.restBaseUrl,
+      credentialsKey: payload.credentialsKey,
+      allowInsecureTls: payload.allowInsecureTls,
       command: payload.command,
     }),
   });
@@ -296,10 +314,3 @@ export const disconnectRouterUser = (routerId: string, username: string) =>
     method: "POST",
     body: JSON.stringify({ username }),
   });
-
-
-
-
-
-
-

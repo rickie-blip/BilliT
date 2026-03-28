@@ -1,4 +1,4 @@
-ï»¿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, ArrowUpDown, Cpu, HardDrive, Plus, PlugZap, Settings, UserX, Wifi, WifiOff } from 'lucide-react';
@@ -26,9 +26,12 @@ type RouterFormState = {
   bandwidthUp: string;
   bandwidthDown: string;
   apiPort: string;
-  apiUsername: string;
-  apiPassword: string;
   allowedSourceIp: string;
+  provider: string;
+  syncEnabled: boolean;
+  restBaseUrl: string;
+  credentialsKey: string;
+  allowInsecureTls: boolean;
   command: string;
 };
 
@@ -39,9 +42,12 @@ type NewRouterFormState = {
   location: string;
   status: RouterStatus;
   apiPort: string;
-  apiUsername: string;
-  apiPassword: string;
   allowedSourceIp: string;
+  provider: string;
+  syncEnabled: boolean;
+  restBaseUrl: string;
+  credentialsKey: string;
+  allowInsecureTls: boolean;
 };
 
 const toFormState = (router: RouterDevice): RouterFormState => ({
@@ -56,9 +62,12 @@ const toFormState = (router: RouterDevice): RouterFormState => ({
   bandwidthUp: String(router.bandwidth.up),
   bandwidthDown: String(router.bandwidth.down),
   apiPort: String(router.apiPort || 8728),
-  apiUsername: router.apiUsername || '',
-  apiPassword: router.apiPassword || '',
   allowedSourceIp: router.allowedSourceIp || '',
+  provider: router.provider || 'MikroTik',
+  syncEnabled: Boolean(router.syncEnabled),
+  restBaseUrl: router.restBaseUrl || '',
+  credentialsKey: router.credentialsKey || '',
+  allowInsecureTls: Boolean(router.allowInsecureTls),
   command: router.lastCommand || '',
 });
 
@@ -69,10 +78,19 @@ const initialNewRouterForm: NewRouterFormState = {
   location: '',
   status: 'offline',
   apiPort: '8728',
-  apiUsername: '',
-  apiPassword: '',
   allowedSourceIp: '',
+  provider: 'MikroTik',
+  syncEnabled: false,
+  restBaseUrl: '',
+  credentialsKey: '',
+  allowInsecureTls: false,
 };
+
+const syncStatusClassName = {
+  success: 'bg-status-online/10 text-status-online',
+  failed: 'bg-status-offline/10 text-status-offline',
+  never: 'bg-muted text-muted-foreground',
+} as const;
 
 export default function RoutersPage() {
   const queryClient = useQueryClient();
@@ -165,19 +183,22 @@ export default function RoutersPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {routers.map((r, i) => {
           const StatusIcon = r.status === 'online' ? Wifi : r.status === 'warning' ? AlertTriangle : WifiOff;
+          const lastSyncStatus = r.lastSyncStatus || 'never';
           return (
             <div
               key={r.id}
               className="bg-card rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow animate-fade-up"
               style={{ animationDelay: `${i * 80}ms` }}
             >
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-4 gap-3">
                 <div>
                   <h3 className="font-semibold text-card-foreground">{r.name}</h3>
                   <p className="text-xs text-muted-foreground">
                     {r.model} - {r.location}
                   </p>
                   <p className="text-[11px] text-muted-foreground">API {r.ipAddress}:{r.apiPort || 8728}</p>
+                  {r.restBaseUrl && <p className="text-[11px] text-muted-foreground">REST {r.restBaseUrl}</p>}
+                  {r.credentialsKey && <p className="text-[11px] text-muted-foreground">Credentials key: {r.credentialsKey}</p>}
                   {r.lastConfiguredAt && (
                     <p className="text-[11px] text-muted-foreground mt-1">
                       Last configured {r.lastConfiguredAt}
@@ -185,17 +206,22 @@ export default function RoutersPage() {
                     </p>
                   )}
                 </div>
-                <span
-                  className={cn(
-                    'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
-                    r.status === 'online' && 'bg-status-online/10 text-status-online',
-                    r.status === 'warning' && 'bg-status-warning/10 text-status-warning',
-                    r.status === 'offline' && 'bg-status-offline/10 text-status-offline'
-                  )}
-                >
-                  <StatusIcon className="w-3 h-3" />
-                  {r.status}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span
+                    className={cn(
+                      'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
+                      r.status === 'online' && 'bg-status-online/10 text-status-online',
+                      r.status === 'warning' && 'bg-status-warning/10 text-status-warning',
+                      r.status === 'offline' && 'bg-status-offline/10 text-status-offline'
+                    )}
+                  >
+                    <StatusIcon className="w-3 h-3" />
+                    {r.status}
+                  </span>
+                  <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-medium capitalize', syncStatusClassName[lastSyncStatus])}>
+                    sync {lastSyncStatus}
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4 mb-4">
@@ -233,7 +259,14 @@ export default function RoutersPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground border-t border-border pt-3">
+              <div className="rounded-lg border border-border bg-background/60 p-3 text-xs text-muted-foreground space-y-1">
+                <p>Provider: {r.provider || 'MikroTik'}</p>
+                <p>Sync: {r.syncEnabled ? 'Enabled' : 'Disabled'}</p>
+                <p>{r.lastSyncAt ? `Last sync ${r.lastSyncAt}` : 'No sync recorded yet'}</p>
+                <p>{r.lastSyncMessage || 'Router has not reported sync details yet'}</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground border-t border-border pt-3 mt-4">
                 <span>{r.connectedUsers} users connected</span>
                 <span>Uptime: {r.uptime}</span>
                 <button
@@ -266,7 +299,7 @@ export default function RoutersPage() {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-card-foreground">Configure {editingRouter.name}</h3>
-                <p className="text-xs text-muted-foreground">RouterOS API / RADIUS related settings.</p>
+                <p className="text-xs text-muted-foreground">Router discovery settings and safe backend-only credential references.</p>
               </div>
               <button
                 type="button"
@@ -282,21 +315,25 @@ export default function RoutersPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div><label className="text-xs text-muted-foreground">Name</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
+              <div><label className="text-xs text-muted-foreground">Provider</label><input value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">IP Address</label><input value={form.ipAddress} onChange={(e) => setForm({ ...form, ipAddress: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">Location</label><input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">Status</label><select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as RouterStatus })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"><option value="online">online</option><option value="warning">warning</option><option value="offline">offline</option></select></div>
               <div><label className="text-xs text-muted-foreground">API Port</label><input type="number" value={form.apiPort} onChange={(e) => setForm({ ...form, apiPort: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
-              <div><label className="text-xs text-muted-foreground">API Username</label><input value={form.apiUsername} onChange={(e) => setForm({ ...form, apiUsername: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
-              <div><label className="text-xs text-muted-foreground">API Password</label><input type="password" value={form.apiPassword} onChange={(e) => setForm({ ...form, apiPassword: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
+              <div className="md:col-span-2"><label className="text-xs text-muted-foreground">REST Base URL</label><input value={form.restBaseUrl} onChange={(e) => setForm({ ...form, restBaseUrl: e.target.value })} placeholder="https://router.example.com" className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
+              <div><label className="text-xs text-muted-foreground">Credentials Key</label><input value={form.credentialsKey} onChange={(e) => setForm({ ...form, credentialsKey: e.target.value })} placeholder="tower_a" className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">Allowed Source IP</label><input value={form.allowedSourceIp} onChange={(e) => setForm({ ...form, allowedSourceIp: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">Connected Users</label><input type="number" value={form.connectedUsers} onChange={(e) => setForm({ ...form, connectedUsers: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">CPU Load %</label><input type="number" value={form.cpuLoad} onChange={(e) => setForm({ ...form, cpuLoad: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">Memory Usage %</label><input type="number" value={form.memoryUsage} onChange={(e) => setForm({ ...form, memoryUsage: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
-              <div><label className="text-xs text-muted-foreground">Command / Note</label><input value={form.command} onChange={(e) => setForm({ ...form, command: e.target.value })} placeholder="e.g. /ppp profile set 1 rate-limit=10M/10M" className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
+              <div><label className="text-xs text-muted-foreground">Command / Note</label><input value={form.command} onChange={(e) => setForm({ ...form, command: e.target.value })} placeholder="Optional operator note" className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">Bandwidth Up (Mbps)</label><input type="number" value={form.bandwidthUp} onChange={(e) => setForm({ ...form, bandwidthUp: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">Bandwidth Down (Mbps)</label><input type="number" value={form.bandwidthDown} onChange={(e) => setForm({ ...form, bandwidthDown: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
+              <label className="flex items-center gap-2 text-sm text-card-foreground"><input type="checkbox" checked={form.syncEnabled} onChange={(e) => setForm({ ...form, syncEnabled: e.target.checked })} /> Enable live router sync</label>
+              <label className="flex items-center gap-2 text-sm text-card-foreground"><input type="checkbox" checked={form.allowInsecureTls} onChange={(e) => setForm({ ...form, allowInsecureTls: e.target.checked })} /> Allow insecure TLS for RouterOS REST</label>
             </div>
 
+            <p className="text-xs text-muted-foreground">Router usernames and passwords are now loaded from backend env variables using the credentials key, and are never sent to the browser.</p>
             {routerTestMessage && <p className="text-xs text-muted-foreground">Connection test: {routerTestMessage}</p>}
             {configureMutation.isError && <p className="text-xs text-destructive">{configureMutation.error instanceof Error ? configureMutation.error.message : 'Failed to configure router'}</p>}
             {testMutation.isError && <p className="text-xs text-destructive">{testMutation.error instanceof Error ? testMutation.error.message : 'Failed to test connection'}</p>}
@@ -328,9 +365,12 @@ export default function RoutersPage() {
                       bandwidthUp: Number(form.bandwidthUp),
                       bandwidthDown: Number(form.bandwidthDown),
                       apiPort: Number(form.apiPort),
-                      apiUsername: form.apiUsername,
-                      apiPassword: form.apiPassword,
                       allowedSourceIp: form.allowedSourceIp,
+                      provider: form.provider,
+                      syncEnabled: form.syncEnabled,
+                      restBaseUrl: form.restBaseUrl,
+                      credentialsKey: form.credentialsKey,
+                      allowInsecureTls: form.allowInsecureTls,
                       command: form.command || undefined,
                     })
                   }
@@ -359,7 +399,7 @@ export default function RoutersPage() {
                   <div key={`${session.username}-${idx}`} className="border border-border rounded-lg p-2 text-xs flex items-center justify-between gap-2">
                     <div>
                       <p className="font-medium text-card-foreground">{session.username}</p>
-                      <p className="text-muted-foreground">{session.ipAddress} Â· {session.sessionTime} Â· {session.bandwidthUsage}</p>
+                      <p className="text-muted-foreground">{session.ipAddress} · {session.sessionTime} · {session.bandwidthUsage}</p>
                     </div>
                     <button
                       type="button"
@@ -396,7 +436,7 @@ export default function RoutersPage() {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-card-foreground">Add New Router</h3>
-                <p className="text-xs text-muted-foreground">Create and configure a new router device.</p>
+                <p className="text-xs text-muted-foreground">Create a router record and point it at backend-managed MikroTik REST credentials.</p>
               </div>
               <button
                 type="button"
@@ -413,11 +453,16 @@ export default function RoutersPage() {
               <div><label className="text-xs text-muted-foreground">IP Address</label><input value={newRouterForm.ipAddress} onChange={(e) => setNewRouterForm({ ...newRouterForm, ipAddress: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">Location</label><input value={newRouterForm.location} onChange={(e) => setNewRouterForm({ ...newRouterForm, location: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">Status</label><select value={newRouterForm.status} onChange={(e) => setNewRouterForm({ ...newRouterForm, status: e.target.value as RouterStatus })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"><option value="online">online</option><option value="warning">warning</option><option value="offline">offline</option></select></div>
+              <div><label className="text-xs text-muted-foreground">Provider</label><input value={newRouterForm.provider} onChange={(e) => setNewRouterForm({ ...newRouterForm, provider: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div><label className="text-xs text-muted-foreground">API Port</label><input type="number" value={newRouterForm.apiPort} onChange={(e) => setNewRouterForm({ ...newRouterForm, apiPort: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
-              <div><label className="text-xs text-muted-foreground">API Username</label><input value={newRouterForm.apiUsername} onChange={(e) => setNewRouterForm({ ...newRouterForm, apiUsername: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
-              <div><label className="text-xs text-muted-foreground">API Password</label><input type="password" value={newRouterForm.apiPassword} onChange={(e) => setNewRouterForm({ ...newRouterForm, apiPassword: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
+              <div><label className="text-xs text-muted-foreground">Credentials Key</label><input value={newRouterForm.credentialsKey} onChange={(e) => setNewRouterForm({ ...newRouterForm, credentialsKey: e.target.value })} placeholder="tower_a" className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
+              <div className="md:col-span-2"><label className="text-xs text-muted-foreground">REST Base URL</label><input value={newRouterForm.restBaseUrl} onChange={(e) => setNewRouterForm({ ...newRouterForm, restBaseUrl: e.target.value })} placeholder="https://router.example.com" className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
               <div className="md:col-span-2"><label className="text-xs text-muted-foreground">Allowed Source IP</label><input value={newRouterForm.allowedSourceIp} onChange={(e) => setNewRouterForm({ ...newRouterForm, allowedSourceIp: e.target.value })} className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" /></div>
+              <label className="flex items-center gap-2 text-sm text-card-foreground"><input type="checkbox" checked={newRouterForm.syncEnabled} onChange={(e) => setNewRouterForm({ ...newRouterForm, syncEnabled: e.target.checked })} /> Enable live router sync</label>
+              <label className="flex items-center gap-2 text-sm text-card-foreground"><input type="checkbox" checked={newRouterForm.allowInsecureTls} onChange={(e) => setNewRouterForm({ ...newRouterForm, allowInsecureTls: e.target.checked })} /> Allow insecure TLS</label>
             </div>
+
+            <p className="text-xs text-muted-foreground">Credentials are expected in backend env as `ROUTER_&lt;KEY&gt;_USERNAME` and `ROUTER_&lt;KEY&gt;_PASSWORD`.</p>
 
             {createRouterMutation.isError && (
               <p className="text-xs text-destructive">
@@ -438,9 +483,12 @@ export default function RoutersPage() {
                     location: newRouterForm.location || undefined,
                     status: newRouterForm.status,
                     apiPort: Number(newRouterForm.apiPort),
-                    apiUsername: newRouterForm.apiUsername || undefined,
-                    apiPassword: newRouterForm.apiPassword || undefined,
                     allowedSourceIp: newRouterForm.allowedSourceIp || undefined,
+                    provider: newRouterForm.provider || undefined,
+                    syncEnabled: newRouterForm.syncEnabled,
+                    restBaseUrl: newRouterForm.restBaseUrl || undefined,
+                    credentialsKey: newRouterForm.credentialsKey || undefined,
+                    allowInsecureTls: newRouterForm.allowInsecureTls,
                   })
                 }
                 className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm disabled:opacity-60"

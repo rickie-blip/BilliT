@@ -59,3 +59,30 @@ export const MPESA_CALLBACK_URL = process.env.MPESA_CALLBACK_URL || "";
 export const MPESA_BASE_URL =
   process.env.MPESA_BASE_URL ||
   (MPESA_ENVIRONMENT === "sandbox" ? "https://sandbox.safaricom.co.ke" : "https://api.safaricom.co.ke");
+
+const normalizeRouterCredentialsKey = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .toUpperCase();
+
+export const getRouterCredentials = (credentialsKey) => {
+  const normalizedKey = normalizeRouterCredentialsKey(credentialsKey);
+  if (!normalizedKey) {
+    return null;
+  }
+
+  const username = process.env[`ROUTER_${normalizedKey}_USERNAME`]?.trim() || "";
+  const password = process.env[`ROUTER_${normalizedKey}_PASSWORD`]?.trim() || "";
+
+  if (!username || !password) {
+    return null;
+  }
+
+  return {
+    username,
+    password,
+    envKey: normalizedKey,
+  };
+};

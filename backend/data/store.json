@@ -116,6 +116,18 @@
   ],
   "routers": [
     {
+      "provider": "",
+      "syncEnabled": false,
+      "restBaseUrl": "",
+      "credentialsKey": "",
+      "allowInsecureTls": false,
+      "lastSyncAt": "",
+      "lastSyncStatus": "never",
+      "lastSyncMessage": "",
+      "bandwidth": {
+        "up": 156,
+        "down": 412
+      },
       "id": "1",
       "name": "Tower-A MikroTik",
       "model": "CCR1036-12G-4S",
@@ -125,13 +137,21 @@
       "connectedUsers": 84,
       "cpuLoad": 23,
       "memoryUsage": 41,
-      "bandwidth": {
-        "up": 156,
-        "down": 412
-      },
       "location": "Westlands Tower"
     },
     {
+      "provider": "",
+      "syncEnabled": false,
+      "restBaseUrl": "",
+      "credentialsKey": "",
+      "allowInsecureTls": false,
+      "lastSyncAt": "",
+      "lastSyncStatus": "never",
+      "lastSyncMessage": "",
+      "bandwidth": {
+        "up": 340,
+        "down": 890
+      },
       "id": "2",
       "name": "CBD-Router",
       "model": "RB4011iGS+",
@@ -141,13 +161,21 @@
       "connectedUsers": 127,
       "cpuLoad": 58,
       "memoryUsage": 67,
-      "bandwidth": {
-        "up": 340,
-        "down": 890
-      },
       "location": "CBD Office Block"
     },
     {
+      "provider": "",
+      "syncEnabled": false,
+      "restBaseUrl": "",
+      "credentialsKey": "",
+      "allowInsecureTls": false,
+      "lastSyncAt": "",
+      "lastSyncStatus": "never",
+      "lastSyncMessage": "",
+      "bandwidth": {
+        "up": 67,
+        "down": 198
+      },
       "id": "3",
       "name": "Estate-Switch",
       "model": "CRS326-24G-2S+",
@@ -157,13 +185,21 @@
       "connectedUsers": 42,
       "cpuLoad": 78,
       "memoryUsage": 82,
-      "bandwidth": {
-        "up": 67,
-        "down": 198
-      },
       "location": "Kilimani Estate"
     },
     {
+      "provider": "",
+      "syncEnabled": false,
+      "restBaseUrl": "",
+      "credentialsKey": "",
+      "allowInsecureTls": false,
+      "lastSyncAt": "",
+      "lastSyncStatus": "never",
+      "lastSyncMessage": "",
+      "bandwidth": {
+        "up": 0,
+        "down": 0
+      },
       "id": "4",
       "name": "South-B Node",
       "model": "hEX S",
@@ -173,15 +209,12 @@
       "connectedUsers": 0,
       "cpuLoad": 0,
       "memoryUsage": 0,
-      "bandwidth": {
-        "up": 0,
-        "down": 0
-      },
       "location": "South B Distribution"
     }
   ],
   "detectedUsers": [
     {
+      "source": "fallback",
       "id": "1",
       "macAddress": "AA:BB:CC:11:22:33",
       "ipAddress": "10.0.1.12",
@@ -195,6 +228,7 @@
       "assignedCustomer": "Grace Wanjiku"
     },
     {
+      "source": "fallback",
       "id": "2",
       "macAddress": "EE:FF:00:11:22:33",
       "ipAddress": "10.0.1.88",
@@ -208,6 +242,7 @@
       "assignedCustomer": "Grace Wanjiku"
     },
     {
+      "source": "fallback",
       "id": "3",
       "macAddress": "DD:EE:FF:44:55:66",
       "ipAddress": "10.0.1.34",
@@ -221,6 +256,7 @@
       "assignedCustomer": "James Ochieng"
     },
     {
+      "source": "fallback",
       "id": "4",
       "macAddress": "AB:CD:EF:12:34:56",
       "ipAddress": "10.0.2.45",
@@ -234,6 +270,7 @@
       "assignedCustomer": "Grace Wanjiku"
     },
     {
+      "source": "fallback",
       "id": "5",
       "macAddress": "77:88:99:DD:EE:FF",
       "ipAddress": "10.0.1.56",
@@ -247,6 +284,7 @@
       "assignedCustomer": "Peter Kamau"
     },
     {
+      "source": "fallback",
       "id": "6",
       "macAddress": "99:AA:BB:CC:DD:EE",
       "ipAddress": "10.0.3.17",
@@ -547,6 +585,22 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "24",
+      "timestamp": "2026-03-27 16:24",
+      "type": "auth.login.success",
+      "actor": "admin@billit.local",
+      "userId": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+      "sourceIp": "::1"
+    },
+    {
+      "id": "23",
+      "timestamp": "2026-03-27 16:04",
+      "type": "auth.login.success",
+      "actor": "admin@billit.local",
+      "userId": "f98a601e-eed5-4676-bc62-c89ce4080f60",
+      "sourceIp": "::1"
+    },
     {
       "id": "22",
       "timestamp": "2026-03-27 06:09",

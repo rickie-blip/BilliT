@@ -47,6 +47,8 @@ export interface OrganizationSettings {
   notes: string;
 }
 
+export type RouterSyncStatus = 'never' | 'success' | 'failed';
+
 export interface RouterDevice {
   id: string;
   name: string;
@@ -60,12 +62,26 @@ export interface RouterDevice {
   bandwidth: { up: number; down: number };
   location: string;
   apiPort?: number;
-  apiUsername?: string;
-  apiPassword?: string;
   allowedSourceIp?: string;
+  provider?: string;
+  syncEnabled?: boolean;
+  restBaseUrl?: string;
+  credentialsKey?: string;
+  allowInsecureTls?: boolean;
+  lastSyncAt?: string;
+  lastSyncStatus?: RouterSyncStatus;
+  lastSyncMessage?: string;
   lastConfiguredAt?: string;
   lastConfiguredBy?: string;
   lastCommand?: string;
+  provider?: string;
+  syncEnabled?: boolean;
+  restBaseUrl?: string;
+  credentialsKey?: string;
+  allowInsecureTls?: boolean;
+  lastSyncAt?: string;
+  lastSyncStatus?: string;
+  lastSyncMessage?: string;
 }
 
 export interface Plan {
@@ -113,6 +129,36 @@ export interface DetectedUser {
   dataUsage: string;
   router: string;
   assignedCustomer?: string;
+  source?: 'live' | 'fallback';
+}
+
+export interface RouterSyncResult {
+  routerId: string;
+  routerName: string;
+  status: 'success' | 'failed' | 'skipped';
+  message: string;
+  detectedUsersCount: number;
+  dataSource: 'live' | 'fallback';
+  syncedAt: string;
+}
+
+export interface DetectedUsersSyncSummary {
+  syncedAt: string;
+  totalRouters: number;
+  successfulRouters: number;
+  failedRouters: number;
+  skippedRouters: number;
+  detectedUsers: number;
+  usedLiveData: boolean;
+  usedFallbackData: boolean;
+}
+
+export interface DetectedUsersSyncResponse {
+  message: string;
+  detectedUsers: DetectedUser[];
+  routers: RouterDevice[];
+  routerResults: RouterSyncResult[];
+  summary: DetectedUsersSyncSummary;
 }
 
 export interface MpesaTransaction {
@@ -146,4 +192,20 @@ export interface DashboardResponse {
   stats: DashboardStats;
   revenueData: RevenuePoint[];
   recentTransactions: MpesaTransaction[];
+}
+
+
+export interface RouterSyncResult {
+  routerId: string;
+  ok: boolean;
+  usersFound: number;
+  message: string;
+}
+
+export interface DetectedUsersSyncResponse {
+  synced: number;
+  fallback: boolean;
+  results: RouterSyncResult[];
+  detectedUsers: DetectedUser[];
+  routers: RouterDevice[];
 }
