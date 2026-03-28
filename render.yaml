@@ -20,7 +20,6 @@ services:
         value: 60000
       - key: RATE_LIMIT_MAX
         value: 120
-      # M-Pesa — fill these in the Render dashboard
       - key: MPESA_ENVIRONMENT
         value: production
       - key: MPESA_CONSUMER_KEY
@@ -33,8 +32,6 @@ services:
         value: ""
       - key: MPESA_CALLBACK_URL
         value: ""
-      # Router credentials — add per-router blocks in the Render dashboard
-      # e.g. ROUTER_MAIN_USER / ROUTER_MAIN_PASS
     disk:
       name: billit-data
       mountPath: /data
@@ -49,8 +46,6 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
-        # Set this to your backend service URL after first deploy,
-        # e.g. https://billit-backend.onrender.com
         value: ""
     routes:
       - type: rewrite

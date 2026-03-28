@@ -1,0 +1,9 @@
+{
+  "name": "billit",
+  "private": true,
+  "description": "BillIT ISP billing platform — monorepo root",
+  "scripts": {
+    "start:backend": "cd backend && node server.js",
+    "build:frontend": "cd Billit-Dashboard && npm install && npm run build"
+  }
+}
