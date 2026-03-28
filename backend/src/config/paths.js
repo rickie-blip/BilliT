@@ -6,7 +6,6 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..", "..");
 
 const isVercel = Boolean(process.env.VERCEL);
-// Render mounts the persistent disk at /data (configured in render.yaml)
 const isRender = Boolean(process.env.RENDER);
 
 const resolveDataDirectory = () => {
@@ -20,3 +19,6 @@ export const dataFile = path.join(dataDirectory, "store.json");
 export const seedDataFile = path.join(projectRoot, "data", "seed-store.json");
 export const usersFile = path.join(dataDirectory, "users.json");
 export const seedUsersFile = path.join(projectRoot, "data", "seed-users.json");
+
+// Frontend dist — built by the root build command before the server starts
+export const distDirectory = path.resolve(projectRoot, "..", "Billit-Dashboard", "dist");
